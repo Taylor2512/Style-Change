@@ -27,24 +27,38 @@ class TextoConParrafos:
         print(outputs[2][0].shape)  # for each of these 13: 1,16,768 = input sequence, index of each input id in sequence, size of hidden layer
         print(len(outputs[3]))  # 12 (=attention for each layer)
         print(outputs[3][0].shape)  # 0 index = first layer, 1,12,16,16 = , layer, index of each input id in sequence, index of each input id in sequence
-        outputs[1].shape
-        outputs[1].sum()
-        outputs[0][:, 0].shape
-        outputs[0][:, 0].sum()
-        outputs[2][5][:, 0]
+        outsuma=   outputs[1].shape
+        print(outsuma) # for each of these
+        outsuma= outputs[1].sum()
+        print(outsuma) # for each of these
+        outsuma= outputs[0][:, 0].shape
+        print(outsuma) # for each of these
+        outsuma= outputs[0][:, 0].sum()
+        print(outsuma) # for each of these
+        outsuma= outputs[2][5][:, 0]
+        print(outsuma) # for each of these
+  
         cls_tensors = []
-        for i in range(1, 13):
-            cls_tensors.append(outputs[2][i][0, 0])
-            cls_stack = torch.stack(cls_tensors)
-            cls_stack.shape
-            t_cls_stack = cls_stack.transpose(1, 0)
-            F = torch.zeros(12, 1)
-            t_cls_stack.shape
-            F.shape
-            torch.mm(t_cls_stack, F).squeeze() 
+        for i in range(1,13):
+               cls_tensors.append(outputs[2][1][0,0])
+        
+        imrpimir= cls_stack = torch.stack(cls_tensors)
+        print(imrpimir) # for each of these
+        imrpimir= cls_stack.shape
+        print(imrpimir) # for each of these
+        imrpimir= t_cls_stack = cls_stack.transpose(1,0)
+        print(imrpimir) # for each of these
+        imrpimir= F = torch.zeros(12,1)
+        print(imrpimir) # for each of these
+        imrpimir= t_cls_stack.shape
+        print(imrpimir) # for each of these
+        imrpimir= F.shape
+        print(imrpimir) # for each of these
+        imrpimir= torch.mm(t_cls_stack, F).squeeze()
+        print(imrpimir) # for each of these
             
-        model = StackedCLSModel()
-
+             
+            
     def _recorrer_parrafos(self):
             print("La cantidad de párrafos es:", len(self.parrafos))
             for p in self.parrafos:
