@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+             "args": [
+                 "--input",
+                "C:\\DataSets\\release\\Prueba", 
+                "--output", 
+                "C:\\DataSets\\release\\Prueba"
+            ],
             "name": "Python: archivo actual",
             "type": "python",
             "request": "launch",
