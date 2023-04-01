@@ -2,6 +2,7 @@ from sklearn.metrics import accuracy_score
 import torch
 from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
 import os
+import re
 from glob import glob
 class TextoConParrafos:
     def __init__(self, id=None, texto=None, authors=None, changes=None):
@@ -10,9 +11,11 @@ class TextoConParrafos:
         self._authors = authors
         self._changes = changes
         if texto is not None:
-            self._parrafos = texto.split('\n')
+            self._parrafos = re.split(r'\n|\n\n|\r\n\r\n|\n \n', texto)
+            self._totalParrafos= len(self._parrafos)    
         else:
             self._parrafos = []
+            self._totalParrafos=0
         
     @property
     def id(self):
@@ -54,7 +57,16 @@ class TextoConParrafos:
     @parrafos.setter
     def parrafos(self, value):
         self._parrafos = value
+        
+    @property
+    def totalParrafos(self):
+        return self._totalParrafos
+    
+    @totalParrafos.setter
+    def totalParrafos(self, value):
+        self._totalParrafos = value
     
     def GetListParrafos(self):
-        self.parrafos = self.texto.split('r/')
+        self.parrafos = re.split(r'\n|\n\n|\r\n\r\n|\n \n', self.texto)
+        self.totalParrafos= len(self.parrafos)
     

@@ -14,7 +14,7 @@
             "name": "Python: archivo actual",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "Prueba.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

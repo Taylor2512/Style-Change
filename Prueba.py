@@ -70,7 +70,7 @@ def SaveValidationOrTrain(folder):
         textos = TextoConParrafos()
         textos = GetProblemsFileTxtAndJson(folder, problem_id)
         Lista.append(textos)
-    texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'parrafos':o.parrafos} for o in Lista])
+    texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos} for o in Lista])
     thruhs = pd.DataFrame([{'id': o.id, 'autores': o.authors,
                           'cambios': o.changes, 'textos': o.texto} for o in Lista])
     # Exportar el DataFrame a un archivo CSV
