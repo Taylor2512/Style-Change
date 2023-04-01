@@ -40,15 +40,38 @@ def  GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConPa
      with open(file_pathtxt, 'r',encoding='utf-8') as filetxt:
          with open(file_pathJson, 'r') as filejson:
              data = json.load(filejson)  
-         texto_con_parrafos = TextoConParrafos(filetxt.read(),data["authors"],data["authors"])
-        #  texto_con_parrafos.texto(filetxt.read())
-        #  texto_con_parrafos.authors(data["authors"])
-        #  texto_con_parrafos.changes(data["authors"])
-         #texto_con_parrafos._recorrer_parrafos()
+         texto_con_parrafos = TextoConParrafos()
+         texto_con_parrafos.texto=filetxt.read()
+         texto_con_parrafos.id=problem_id
+        #  texto_con_parrafos.authors=data["authors"]
+        #  texto_con_parrafos.changes=data["changes"]
+        #  texto_con_parrafos.GetListParrafos()
+        #  texto_con_parrafos._recorrer_parrafos()
          if isinstance(texto_con_parrafos, TextoConParrafos):
             return texto_con_parrafos
          else:
-            return None        
+            return None   
+        
+
+def SaveDataSet(folder,carpeta):
+    folderComplete= os.path.join(folder,carpeta,carpeta+'-train')
+    SaveValidationOrTrain(folderComplete)
+    folderComplete= os.path.join(folder,carpeta,carpeta+'-validation')
+    SaveValidationOrTrain(folderComplete)
+
+def SaveValidationOrTrain(folder):
+    problem_ids = get_problem_ids(folder) 
+    Lista: List[TextoConParrafos] = []
+    for problem_id in problem_ids:
+        textos=TextoConParrafos()
+        textos= GetProblemsFileTxtAndJson(folder,problem_id)
+        Lista.append(textos)
+    texts = pd.DataFrame([{'id': o.id,'textos': o.texto} for o in Lista])
+    thruhs = pd.DataFrame([{'id': o.id,'autores': o.authors, 'cambios': o.changes, 'textos': o.texto} for o in Lista])
+      # Exportar el DataFrame a un archivo CSV
+    texts.to_csv( os.path.join(folder,'textosproblem.csv'),encoding='utf-8-sig', index=False)
+    thruhs.to_csv( os.path.join(folder,'jsotrutn.csv'),encoding='utf-8-sig', index=False)
+     
         
 def main():
      parser = argparse.ArgumentParser(
@@ -67,20 +90,11 @@ def main():
         required=True,
     )
      args = parser.parse_args()
-     folder= os.path.join(args.input, "dataset1")
-     problem_ids = get_problem_ids(folder) 
-     corpus_dir = "C:\\DataSets\\release\\Prueba\\dataset1\\problem-4200.txt"
-     Lista: List[TextoConParrafos] = []
-     
-     for problem_id in problem_ids:
-         textos=TextoConParrafos()
-         textos= GetProblemsFileTxtAndJson(folder,problem_id)
-         Lista.append(textos)
+     for i in range(1,4):
+         carpeta='pan23-multi-author-analysis-dataset'+str(i)
+         SaveDataSet(args.input, carpeta)
          
-     df = pd.DataFrame([{'autores': o.authors, 'cambios': o.changes, 'textos': o.texto} for o in Lista])
-     print(df)
-
-
+         
 if __name__ == "__main__":
     main()
 # print("La cantidad de párrafos es:", len(texto_con_parrafos.parrafos))

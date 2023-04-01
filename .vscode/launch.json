@@ -7,9 +7,9 @@
         {
              "args": [
                  "--input",
-                "C:\\DataSets\\release\\Prueba", 
+                "C:\\DataSets\\release", 
                 "--output", 
-                "C:\\DataSets\\release\\Prueba"
+                "C:\\DataSets\\release"
             ],
             "name": "Python: archivo actual",
             "type": "python",
