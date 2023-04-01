@@ -4,12 +4,40 @@ from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
 import os
 from glob import glob
 class TextoConParrafos:
-    def __init__(self, texto):
-        self.texto_original = texto
-        self.parrafos = texto.split('\n')
+    def __init__(self, texto=None,authors=None,changes=None):
+        self._texto = texto
+        self._authors = authors
+        self._changes = changes
+        if texto is not None:
+            self.parrafos = texto.split('\n')
+        else:
+            self.parrafos = []        
     @property
     def texto(self):
-        return self.texto_original    
+        return self._texto  
+    
+    @texto.setter
+    def texto(self, value):
+         self._texto  = value
+      
+    
+    @property
+    def authors(self):
+        return self._authors
+    
+    @authors.setter
+    def authors(self, value):
+        self._authors = value
+    
+    @property
+    def changes(self):
+        return self._changes
+    
+    @changes.setter
+    def changes(self, value):
+        self._changes = value
+    
+    
     def TokenizarParrafo(self,sequence):
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         config = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=True)

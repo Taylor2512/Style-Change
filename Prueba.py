@@ -12,7 +12,10 @@ import argparse
 import json
 import warnings
 from enum import Enum
- 
+import pandas as pd
+from typing import List
+
+
 from TextoConParrafos import TextoConParrafos
 from StackedCLSModel import StackedCLSModel
 
@@ -31,7 +34,22 @@ def get_problem_ids(input_folder: str) -> list:
     print(f"Read {len(problem_ids)} problem ids from {input_folder}.")
     return sorted(problem_ids)
 
-
+def  GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConParrafos:
+     file_pathJson = os.path.join(input_folder, "truth-problem-" + problem_id + ".json")
+     file_pathtxt = os.path.join(input_folder, "problem-" + problem_id + ".txt")
+     with open(file_pathtxt, 'r',encoding='utf-8') as filetxt:
+         with open(file_pathJson, 'r') as filejson:
+             data = json.load(filejson)  
+         texto_con_parrafos = TextoConParrafos(filetxt.read(),data["authors"],data["authors"])
+        #  texto_con_parrafos.texto(filetxt.read())
+        #  texto_con_parrafos.authors(data["authors"])
+        #  texto_con_parrafos.changes(data["authors"])
+         #texto_con_parrafos._recorrer_parrafos()
+         if isinstance(texto_con_parrafos, TextoConParrafos):
+            return texto_con_parrafos
+         else:
+            return None        
+        
 def main():
      parser = argparse.ArgumentParser(
         description="PAN23 Style Change Detection Task: Output Verifier"
@@ -49,12 +67,19 @@ def main():
         required=True,
     )
      args = parser.parse_args()
-     problem_ids = get_problem_ids(os.path.join(args.input, "dataset1")) 
+     folder= os.path.join(args.input, "dataset1")
+     problem_ids = get_problem_ids(folder) 
      corpus_dir = "C:\\DataSets\\release\\Prueba\\dataset1\\problem-4200.txt"
-     with open(corpus_dir, 'r') as file:
-        texto_con_parrafos = TextoConParrafos(file.read())
-        texto_con_parrafos._recorrer_parrafos()
-        
+     Lista: List[TextoConParrafos] = []
+     
+     for problem_id in problem_ids:
+         textos=TextoConParrafos()
+         textos= GetProblemsFileTxtAndJson(folder,problem_id)
+         Lista.append(textos)
+         
+     df = pd.DataFrame([{'autores': o.authors, 'cambios': o.changes, 'textos': o.texto} for o in Lista])
+     print(df)
+
 
 if __name__ == "__main__":
     main()
