@@ -46,6 +46,7 @@ def GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConPar
         texto_con_parrafos.authors=data["authors"]
         texto_con_parrafos.changes=data["changes"]
         texto_con_parrafos.GetListParrafos()
+        texto_con_parrafos._GenerarAgrupaciones()
         #  texto_con_parrafos._recorrer_parrafos()
         if isinstance(texto_con_parrafos, TextoConParrafos):
             return texto_con_parrafos
@@ -70,20 +71,21 @@ def SaveValidationOrTrain(folder):
         textos = TextoConParrafos()
         textos = GetProblemsFileTxtAndJson(folder, problem_id)
         Lista.append(textos)
-    texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'sepsParrafo':o.sepsParrafo} for o in Lista])
-    thruhs = pd.DataFrame([{'id': o.id, 'autores': o.authors,
-                          'cambios': o.changes, 'textos': o.texto} for o in Lista])
+    texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,
+                           'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
+    # thruhs = pd.DataFrame([{'id': o.id, 'autores': o.authors,
+    #                       'cambios': o.changes, 'textos': o.texto} for o in Lista])
     # Exportar el DataFrame a un archivo CSV
     texts.to_csv(os.path.join(folder, 'textosproblem.csv'),
                  encoding='utf-8-sig', index=False)
-    thruhs.to_csv(os.path.join(folder, 'jsotrutn.csv'),
-                  encoding='utf-8-sig', index=False)
+    # thruhs.to_csv(os.path.join(folder, 'jsotrutn.csv'),
+    #               encoding='utf-8-sig', index=False)
     
     # Exportar el DataFrame a un archivo XLSX file
     texts.to_excel(os.path.join(folder, 'textosproblem.xlsx'),
                  encoding='utf-8-sig', index=False)
-    thruhs.to_excel(os.path.join(folder, 'jsotrutn.xlsx'),
-                  encoding='utf-8-sig', index=False)
+    # thruhs.to_excel(os.path.join(folder, 'jsotrutn.xlsx'),
+    #               encoding='utf-8-sig', index=False)
     
 
 
