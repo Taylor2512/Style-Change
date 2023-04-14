@@ -5,12 +5,13 @@ import os
 import re
 from glob import glob
 class TextoConParrafos:
-    def __init__(self, id=None, texto=None, authors=None, changes=None,sepsParrafo=None):
+    def __init__(self, id=None, texto=None, authors=None, changes=None,sepsParrafo=None,nuevoparrafos=None):
         self._id = id
         self._texto = texto
         self._authors = authors
         self._changes = changes
         self._sepsParrafo=sepsParrafo
+        self._nuevoparrafos=nuevoparrafos
         if texto is not None:
             self._parrafos = self.GetListParrafos()
             self._totalParrafos= len(self._parrafos)    
@@ -58,6 +59,14 @@ class TextoConParrafos:
     @parrafos.setter
     def parrafos(self, value):
         self._parrafos = value
+       
+    @property
+    def nuevoparrafos(self):
+        return self._nuevoparrafos
+    
+    @nuevoparrafos.setter
+    def nuevoparrafos(self, value):
+        self._nuevoparrafos = value
         
     @property
     def totalParrafos(self):
@@ -81,4 +90,23 @@ class TextoConParrafos:
         self._UnirSeparaciones()
         
     def _UnirSeparaciones(self):
-        self.sepsParrafo= 'SEP'.join(self.parrafos)
+        self.sepsParrafo= '[SEP]'.join(self.parrafos)
+    
+    
+    def _GenerarAgrupaciones(self):
+        grupos = []
+        self._nuevoparrafos = []
+
+        for i in range(len(self.parrafos)-1):
+            grupo = [self.parrafos[i], self.parrafos[i+1]]
+            grupos.append(grupo)
+        
+      
+        for grupo in grupos:
+            nuevo_grupo = []
+            nuevo_grupo = '[SEP]'.join(grupo)
+            self._nuevoparrafos.append(nuevo_grupo)
+        
+        #NO MOVER REFICAR MAS TARDE
+        # for agregarcls in self._nuevoparrafos:
+        #     agregarcls.append('CLS' + agregarcls)

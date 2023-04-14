@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
-
-
+ 
 class StackedCLSModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -36,7 +35,7 @@ class StackedCLSModel(nn.Module):
         config = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=True)
         model = BertModel.from_pretrained('bert-base-uncased', config=config)
         tokenized_sequence = tokenizer.tokenize(sequence)
-        indexed_tokens = tokenizer.encode(tokenized_sequence, return_tensors='pt')
+        indexed_tokens = tokenizer.encode(tokenized_sequence, largPading=largePading)
         outputs = model(indexed_tokens)
         print(len(outputs))  # 4 Bert da una tupla de 4 elementos
         print(outputs[0].shape)  # 1, 16, 768 son los embedding de los últimos tokens
