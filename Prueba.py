@@ -94,16 +94,21 @@ def GenerarSolucion(args, carpeta):
     datframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
     datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
     arreglo_strings = np.array(datframe["nuevoParrafo"])
-
+    vectorized_text = []
     for index, row in datframe.iterrows():
-        vectorized_text = []
-        parrafo=row["nuevoParrafo"]
-        texto_con_parrafos = ast.literal_eval(parrafo )
-        for parrafo in texto_con_parrafos:
-            modelo = StackedCLSModel()
-            vectorize= modelo.TokenizarParrafo(parrafo[0],parrafo[1],512)
-            vectorized_text.append(vectorize)
-    datframe.at[index, 'vectorized_text'] = vectorized_text
+        vectorized_text.append(ExtraerVectorice(row))
+    datframe['text_vec'] = datframe.apply(lambda r: vectorized_text,axis=1)
+
+
+def ExtraerVectorice(row):
+    vectorized_text = []
+    parrafo=row["nuevoParrafo"]
+    texto_con_parrafos = ast.literal_eval(parrafo )
+    for parrafo in texto_con_parrafos:
+        modelo = StackedCLSModel()
+        vectorize= modelo.TokenizarParrafo(parrafo[0],parrafo[1],512)
+        vectorized_text.append(vectorize)
+    return vectorized_text
 
         
                  
