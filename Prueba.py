@@ -13,6 +13,8 @@ import json
 import warnings
 from enum import Enum
 import pandas as pd
+import ast
+
 from typing import List
 
 
@@ -78,15 +80,34 @@ def SaveValidationOrTrain(folder):
     # Exportar el DataFrame a un archivo CSV
     texts.to_csv(os.path.join(folder, 'textosproblem.csv'),
                  encoding='utf-8-sig', index=False)
-    # thruhs.to_csv(os.path.join(folder, 'jsotrutn.csv'),
-    #               encoding='utf-8-sig', index=False)
     
+    
+   
     # Exportar el DataFrame a un archivo XLSX file
     texts.to_excel(os.path.join(folder, 'textosproblem.xlsx'),
                  encoding='utf-8-sig', index=False)
     # thruhs.to_excel(os.path.join(folder, 'jsotrutn.xlsx'),
     #               encoding='utf-8-sig', index=False)
-    
+    # 
+def GenerarSolucion(args, carpeta):
+    train= os.path.join(args.input, carpeta) 
+    datframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
+    datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
+    arreglo_strings = np.array(datframe["nuevoParrafo"])
+
+    for index, row in datframe.iterrows():
+        vectorized_text = []
+        parrafo=row["nuevoParrafo"]
+        texto_con_parrafos = ast.literal_eval(parrafo )
+        for parrafo in texto_con_parrafos:
+            modelo = StackedCLSModel()
+            vectorize= modelo.TokenizarParrafo(parrafo[0],parrafo[1],512)
+            vectorized_text.append(vectorize)
+    datframe.at[index, 'vectorized_text'] = vectorized_text
+
+        
+                 
+
 
 
 def main():
@@ -107,16 +128,17 @@ def main():
     )
 
     args = parser.parse_args()
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        SaveDataSet(args.input, carpeta)
-
     # for i in range(1, 4):
     #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-    #     datframe = pd.read_csv(os.path.join(carpeta,carpeta+'-train','textosproblem.csv'))
-    #     datframe = pd.read_csv(os.path.join(carpeta,carpeta+'-validation','textosproblem.csv'))
+    #     SaveDataSet(args.input, carpeta)
 
+    
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        GenerarSolucion(args, carpeta)
 
+        
+        
 if __name__ == "__main__":
     main()
 # print("La cantidad de párrafos es:", len(texto_con_parrafos.parrafos))

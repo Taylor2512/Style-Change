@@ -1,3 +1,4 @@
+import re
 import torch
 import torch.nn as nn
 from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
@@ -5,10 +6,10 @@ from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
 class StackedCLSModel(nn.Module):
     def __init__(self):
         super().__init__()
-        self.bert = DebertaModel.from_pretrained('microsoft/deberta-base')
-        self.Fusion = torch.nn.Parameter(torch.zeros(12, 1))
-        self.lin1 = torch.nn.Linear(768, 128)
-        self.lin2 = torch.nn.Linear(128, 2)
+        # self.bert = DebertaModel.from_pretrained('microsoft/deberta-base')
+        # self.Fusion = torch.nn.Parameter(torch.zeros(12, 1))
+        # self.lin1 = torch.nn.Linear(768, 128)
+        # self.lin2 = torch.nn.Linear(128, 2)
 
     def forward(self, input_ids, input_masks, targets):
         output = self.bert(input_ids, input_masks)
@@ -30,49 +31,23 @@ class StackedCLSModel(nn.Module):
         logits = self.forward(input_ids, input_masks, targets=None)
         return (logits.sigmoid() > 0.5)
     
-    def TokenizarParrafo(self,sequence):
+    def TokenizarParrafo(self,sequence1:str,secuence2:str,max_length):
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         config = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=True)
         model = BertModel.from_pretrained('bert-base-uncased', config=config)
-        tokenized_sequence = tokenizer.tokenize(sequence)
-        indexed_tokens = tokenizer.encode(tokenized_sequence, largPading=largePading)
-        outputs = model(indexed_tokens)
-        print(len(outputs))  # 4 Bert da una tupla de 4 elementos
-        print(outputs[0].shape)  # 1, 16, 768 son los embedding de los últimos tokens
-        print(outputs[1].shape)  # 1, 768 del token CLS
-        print(len(outputs[2]))  # 13  = input embedding (index 0) + 12 hidden layers (indices 1 to 12)
-        print(outputs[2][0].shape)  # for each of these 13: 1,16,768 = input sequence, index of each input id in sequence, size of hidden layer
-        print(len(outputs[3]))  # 12 (=attention for each layer)
-        print(outputs[3][0].shape)  # 0 index = first layer, 1,12,16,16 = , layer, index of each input id in sequence, index of each input id in sequence
-        outsuma=   outputs[1].shape
-        print(outsuma) # for each of these
-        outsuma= outputs[1].sum()
-        print(outsuma) # for each of these
-        outsuma= outputs[0][:, 0].shape
-        print(outsuma) # for each of these
-        outsuma= outputs[0][:, 0].sum()
-        print(outsuma) # for each of these
-        outsuma= outputs[2][5][:, 0]
-        print(outsuma) # for each of these
-  
-        cls_tensors = []
-        for i in range(1,13):
-               cls_tensors.append(outputs[2][1][0,0])
+        # # tokenized_sequence = tokenizer.tokenize(sequence)
+        # sequence1 = re.sub(r"[^a-zA-Záéíóú.,!?;:<>()$€\[\]]+", r" ", sequence1)   # reemplaza todas las coincidencias del patrón con un espacio
+        # sequence2 = re.sub(r"[^a-zA-Záéíóú.,!?;:<>()$€\[\]]+", r" ", sequence2)   # reemplaza todas las coincidencias del patrón con un espacio
+
+        indexed_tokens = tokenizer.encode(sequence1,secuence2,
+          add_special_tokens=True,      # especifica si se agregan tokens especiales al principio y al final de la secuencia de tokens
+      max_length=max_length,        # especifica la longitud máxima de la secuencia de tokens resultante
+      padding='longest',            # especifica cómo rellenar secuencias más cortas a la misma longitud que la secuencia más larga.
+      truncation=True,              # especifica si se truncan las secuencias que son más largas que "max_length"
+      return_tensors='np'           # especifica que la salida debe devolverse como una matriz numpy (o pt?).
+        )
+        return indexed_tokens[0]
         
-        imrpimir= cls_stack = torch.stack(cls_tensors)
-        print(imrpimir) # for each of these
-        imrpimir= cls_stack.shape
-        print(imrpimir) # for each of these
-        imrpimir= t_cls_stack = cls_stack.transpose(1,0)
-        print(imrpimir) # for each of these
-        imrpimir= F = torch.zeros(12,1)
-        print(imrpimir) # for each of these
-        imrpimir= t_cls_stack.shape
-        print(imrpimir) # for each of these
-        imrpimir= F.shape
-        print(imrpimir) # for each of these
-        imrpimir= torch.mm(t_cls_stack, F).squeeze()
-        print(imrpimir) # for each of these
             
              
             

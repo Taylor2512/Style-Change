@@ -94,18 +94,11 @@ class TextoConParrafos:
     
     
     def _GenerarAgrupaciones(self):
-        grupos = []
-        self._nuevoparrafos = []
-
-        for i in range(len(self.parrafos)-1):
+         self._nuevoparrafos = []
+         for i in range(len(self.parrafos)-1):
             grupo = [self.parrafos[i], self.parrafos[i+1]]
-            grupos.append(grupo)
-        
-      
-        for grupo in grupos:
-            nuevo_grupo = []
-            nuevo_grupo = '[SEP]'.join(grupo)
-            self._nuevoparrafos.append(nuevo_grupo)
+            self._nuevoparrafos.append(grupo)
+    
         
         #NO MOVER REFICAR MAS TARDE
         # for agregarcls in self._nuevoparrafos:
