@@ -68,14 +68,24 @@ class MyDataset(Dataset):             # define una nueva clase MyDataset que her
         
     def __getitem__(self, index):   # define el método "__getitem__" que toma un solo argumento index
         ''' el metodo __getitem__ devuelve un diccionario que contiene cuatro claves: 'input_ids', 'attention_mask', 'labels'y 'added_features' '''
-        input_ids = torch.tensor(self.data.text_vec.iloc[index]).cpu() # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
-        attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
-        label = self.data.same.iloc[index]              # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
-        targets = torch.tensor([1 - label, label])  #ojo probar
+        # verificar si los datos son arrrglo y luego recorrer para optener los imputs de cada instancia del dataframe
+        
+        arregloImput=self.data.text_vec.iloc[index]
+        imputarray=[]
+        attention_maskarray=[]
+        targetsarray=[]
+        for val in arregloImput:
+            input_ids = torch.tensor(val).cpu() # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
+            imputarray.append(input_ids)
+            attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
+            attention_maskarray.append(attention_mask)
+            label = self.data.same.iloc[index]              # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
+            targets = torch.tensor([1 - label, label])  #ojo probar
+            targetsarray.append(targets)
         return {
-            'input_ids': input_ids,               # devuelve las características de entrada para el punto de datos
-            'attention_mask': attention_mask,     # devuelve la máscara de atención para el punto de datos
-            'labels': targets                    # devuelve un valor escalar que representa la puntuación de complejidad
+        'input_ids': imputarray,               # devuelve las características de entrada para el punto de datos
+            'attention_mask': attention_maskarray,     # devuelve la máscara de atención para el punto de datos
+            'labels': targetsarray                    # devuelve un valor escalar que representa la puntuación de complejidad
         }
             
     def __len__(self):    

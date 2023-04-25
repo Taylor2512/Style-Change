@@ -19,7 +19,7 @@ from typing import List
 
 
 from TextoConParrafos import TextoConParrafos
-from StackedCLSModel import StackedCLSModel
+from StackedCLSModel import StackedCLSModel,MyDataset
 
 
 def get_problem_ids(input_folder: str) -> list:
@@ -91,18 +91,23 @@ def SaveValidationOrTrain(folder):
     # 
 def GenerarSolucion(args, carpeta):
     train= os.path.join(args.input, carpeta) 
-    datframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
+    dataframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
     datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
     
-    datframe=datframe.iloc[:2,:]
-    arreglo_strings = np.array(datframe["nuevoParrafo"])
+    dataframe=dataframe.iloc[:2,:]
+    arreglo_strings = np.array(dataframe["nuevoParrafo"])
     vectorized_text = []
     vectores = []
-    for index, row in datframe.iterrows():
+    for index, row in dataframe.iterrows():
         vectorized_text.append(ExtraerVectorice(row))
         vectores.append(vectorized_text)  # agregar el último valor de vectorized_text a vectores
-        vectorized_text.clear()
-    datframe['text_vec'] = vectores  # agregar la nueva columna al dataframe
+        #vectorized_text.clear()
+    dataframe['text_vec'] = vectorized_text  # agregar la nueva columna al dataframe
+    dataEntrenamiento =MyDataset(dataframe)
+    
+    for index,row in dataframe.iterrows():
+        valorencontrado= dataEntrenamiento.__getitem__(index)
+    
     
     
 
