@@ -93,11 +93,18 @@ def GenerarSolucion(args, carpeta):
     train= os.path.join(args.input, carpeta) 
     datframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
     datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
+    
+    datframe=datframe.iloc[:2,:]
     arreglo_strings = np.array(datframe["nuevoParrafo"])
     vectorized_text = []
+    vectores = []
     for index, row in datframe.iterrows():
         vectorized_text.append(ExtraerVectorice(row))
-    datframe['text_vec'] = datframe.apply(lambda r: vectorized_text,axis=1)
+        vectores.append(vectorized_text)  # agregar el último valor de vectorized_text a vectores
+        vectorized_text.clear()
+    datframe['text_vec'] = vectores  # agregar la nueva columna al dataframe
+    
+    
 
 
 def ExtraerVectorice(row):
