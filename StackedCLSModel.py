@@ -1,37 +1,51 @@
+import ast
 import re
 from sklearn import datasets
+from sklearn.preprocessing import binarize
 import torch
 import torch.nn as nn
+import numpy as np
+
 from torch.utils.data import Dataset, DataLoader
-from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
- 
+from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
+from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss
+tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
+config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
+MODEL_TYPE = 'bert'
+MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
 class StackedCLSModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # self.bert = DebertaModel.from_pretrained('microsoft/deberta-base')
-        # self.Fusion = torch.nn.Parameter(torch.zeros(12, 1))
-        # self.lin1 = torch.nn.Linear(768, 128)
-        # self.lin2 = torch.nn.Linear(128, 2)
-
+    def __init__(self, model= MODEL, model_type=MODEL_TYPE):
+        super(StackedCLSModel, self).__init__()
+        self.model=model
+        self.model_type=model_type
+        self.Fusion = nn.Parameter(torch.zeros(12,1))
+        self.lin1 = nn.Linear(768, 128)
+        self.lin2 = nn.Linear(128, 2)
+    
     def forward(self, input_ids, input_masks, targets):
-        output = self.bert(input_ids, input_masks)
-        cls_tensors = torch.stack([output[2][n][0, 0] for n in range(1, 13)])
-        t_cls_tensors = cls_tensors.transpose(1, 0)
-        pooled_layers = torch.mm(t_cls_tensors, self.Fusion).squeeze()
-        x = self.lin1(pooled_layers)
-        x = torch.nn.Dropout(0.3)(x)
-        x = torch.nn.tanh(x)  # o torch.nn.ReLU(x)
-        logits = self.lin2(x)
+    #output = self.bert(input_ids, input_masks)
+     outputs = self.model(input_ids, input_masks,targets)
+     if self.model_type == "bert":
+         cls_tensors = torch.stack([outputs[2][n][0,0] for n in range(1,13)]) #ojo cómo leo la columna outputs
+     elif self.model_type == "deberta":
+      cls_tensors = torch.stack([outputs[1][n][0,0] for n in range(1,13)]) #ojo cómo leo la columna outputs
+      t_cls_tensors = cls_tensors.transpose(1,0)
+    #pooled_layers = torch.nn(t_cls_tensors, self.Fusion).squeeze()
+      pooled_layers = nn(t_cls_tensors, self.Fusion).squeeze()
+      x = self.lin1(pooled_layers)
+    #x = torch.nn.Dropout(0.3)
+    #x = torch.nn.tanh(x) # o torch.nn.ReLU(x)
+      x = nn.Dropout(0.3)
+      x = nn.tanh(x) # o torch.nn.ReLU(x)
+      logits = self.lin2(x)
+      loss = None
+      if targets:
+      #loss = torch.nn.BCEWithLogitsLoss(logits, targets)
+       loss = nn.CrossEntropyLoss(logits, targets)  #ojo xq los labels los hace multiclase, ya no suso el BCE
+      print("loss:", loss)
+      return logits, loss
 
-        loss = None
-        if targets is not None:
-            loss = torch.nn.BCEWithLogitsLoss()(logits, targets)
-
-        return logits, loss
-
-    def predict(self, input_ids, input_masks):
-        logits = self.forward(input_ids, input_masks, targets=None)
-        return (logits.sigmoid() > 0.5)
+ 
     
     def TokenizarParrafo(self,sequence1:str,secuence2:str,max_length):
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -58,6 +72,60 @@ class StackedCLSModel(nn.Module):
             for p in self.parrafos:
                 self.TokenizarParrafo(p)
 
+        
+    def predict(self, input_ids, input_masks,targets):
+          logits = self.forward(input_ids, input_masks, targets)
+          #return (logits.sigmoid() > 0.5) * 1
+          return (logits.argmax() > 0.5) * 1
+    def binarize(y ,threshold=0.5, triple_valued=False):
+        y = np.array(y)
+        y = np.ma.fix_invalid(y, fill_value=threshold)
+        if triple_valued:
+            y[y > threshold] = 1
+        else:
+            y[y >= threshold] = 1
+            y[y < threshold] = 0
+        
+        return y
+    
+            
+    def __len__(self):    
+        return self.len   # devuelve la longitud del conjunto de datos personalizado
+    
+    
+    def forward(self, input_ids, input_masks, targets):
+    #output = self.bert(input_ids, input_masks)
+     outputs = self.model(input_ids, input_masks,targets)
+     if self.model_type == "bert":
+         cls_tensors = torch.stack([outputs[2][n][0,0] for n in range(1,13)]) #ojo cómo leo la columna outputs
+     elif self.model_type == "deberta":
+      cls_tensors = torch.stack([outputs[1][n][0,0] for n in range(1,13)]) #ojo cómo leo la columna outputs
+      t_cls_tensors = cls_tensors.transpose(1,0)
+    #pooled_layers = torch.nn(t_cls_tensors, self.Fusion).squeeze()
+      pooled_layers = nn(t_cls_tensors, self.Fusion).squeeze()
+      x = self.lin1(pooled_layers)
+    #x = torch.nn.Dropout(0.3)
+    #x = torch.nn.tanh(x) # o torch.nn.ReLU(x)
+      x = nn.Dropout(0.3)
+      x = nn.tanh(x) # o torch.nn.ReLU(x)
+      logits = self.lin2(x)
+      loss = None
+      if targets:
+      #loss = torch.nn.BCEWithLogitsLoss(logits, targets)
+       loss = nn.CrossEntropyLoss(logits, targets)  #ojo xq los labels los hace multiclase, ya no suso el BCE
+      print("loss:", loss)
+      return logits, loss
+  
+  
+    def f1(true_y, pred_y):
+        true_y_filtered, pred_y_filtered = [], []
+        for true, pred in zip(true_y, pred_y):
+            if pred != 0.5:
+                true_y_filtered.append(true)
+                pred_y_filtered.append(pred)
+        pred_y_filtered = binarize(pred_y_filtered)
+        return f1_score(true_y_filtered, pred_y_filtered)
+
 
 
 class MyDataset(Dataset):             # define una nueva clase MyDataset que hereda de Dataset 
@@ -77,16 +145,21 @@ class MyDataset(Dataset):             # define una nueva clase MyDataset que her
         for val in arregloImput:
             input_ids = torch.tensor(val).cpu() # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
             imputarray.append(input_ids)
-            attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
-            attention_maskarray.append(attention_mask)
-            label = self.data.same.iloc[index]              # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
-            targets = torch.tensor([1 - label, label])  #ojo probar
-            targetsarray.append(targets)
+            input_masks = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
+            attention_maskarray.append(input_masks)
+            labels=ast.literal_eval(self.data.same.iloc[index]) 
+            for label in labels:
+                targets = torch.tensor([1 - label, label])  #ojo probar
+                targetsarray.append(targets) 
+                modelo = StackedCLSModel()
+                prueba= modelo.predict(input_ids,input_masks,targets)
+                verifica=prueba
+           
+          
         return {
         'input_ids': imputarray,               # devuelve las características de entrada para el punto de datos
             'attention_mask': attention_maskarray,     # devuelve la máscara de atención para el punto de datos
             'labels': targetsarray                    # devuelve un valor escalar que representa la puntuación de complejidad
         }
-            
-    def __len__(self):    
-        return self.len   # devuelve la longitud del conjunto de datos personalizado
+        
+    
