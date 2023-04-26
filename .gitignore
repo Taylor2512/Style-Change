@@ -1,0 +1,7 @@
+# Visual Studio Code
+.vscode
+.vscode/launch.json
+
+# Cache files
+__pycache__/
+__pycache__/*.pyc
