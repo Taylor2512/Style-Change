@@ -5,7 +5,7 @@ import os
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
+from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
 import os
 from glob import glob
 import argparse
@@ -19,7 +19,8 @@ from typing import List
 
 
 from TextoConParrafos import TextoConParrafos
-from StackedCLSModel import StackedCLSModel,MyDataset
+from StackedCLSModel import StackedCLSModel
+from TextDataset import TextDataset
 
 
 def get_problem_ids(input_folder: str) -> list:
@@ -90,37 +91,53 @@ def SaveValidationOrTrain(folder):
     #               encoding='utf-8-sig', index=False)
     # 
 def GenerarSolucion(args, carpeta):
+    
+    if args.modelType=='bert':
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        config = BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=True)
+        MODEL = BertModel.from_pretrained('bert-base-uncased', config=config)
+    elif args.modelType=='deberta':
+        tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
+        config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
+        MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
+        
+    modelo = StackedCLSModel(MODEL,args.modelType, tokenizer)    
     train= os.path.join(args.input, carpeta) 
     dataframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
     datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
     
     dataframe=dataframe.iloc[:2,:]
-    arreglo_strings = np.array(dataframe["nuevoParrafo"])
     vectorized_text = []
     vectores = []
     for index, row in dataframe.iterrows():
-        vectorized_text.append(ExtraerVectorice(row))
+        vectorized_text.append(ExtraerVectorice(index,row,modelo))
         vectores.append(vectorized_text)  # agregar el último valor de vectorized_text a vectores
-        #vectorized_text.clear()
     dataframe['text_vec'] = vectorized_text  # agregar la nueva columna al dataframe
-    dataEntrenamiento =MyDataset(dataframe)
+  
     
-    for index,row in dataframe.iterrows():
-        valorencontrado= dataEntrenamiento.__getitem__(index)
     
     
     
 
 
-def ExtraerVectorice(row):
-    vectorized_text = []
+def ExtraerVectorice(index,row,modelo:StackedCLSModel):
+ 
     parrafo=row["nuevoParrafo"]
-    texto_con_parrafos = ast.literal_eval(parrafo )
-    for parrafo in texto_con_parrafos:
-        modelo = StackedCLSModel()
-        vectorize= modelo.TokenizarParrafo(parrafo[0],parrafo[1],512)
-        vectorized_text.append(vectorize)
-    return vectorized_text
+    texto_con_parrafos = json.loads(parrafo)
+    vectorize_text_vec=[]
+    tensors=[]
+
+    labels=json.loads(row['same'])
+    
+    for indedx, textos in enumerate(texto_con_parrafos):
+        vectorize= TextDataset(textos,labels,modelo.tokenizer,512).__getitem__(indedx)
+        dictionary= modelo.TokenizarParrafo(textos[0],textos[1],512)
+        modelo.train()
+
+        tensor= modelo.predict(dictionary['input_ids'],dictionary['attention_mask'],vectorize['labels'])
+        vectorize_text_vec.append(vectorize)
+        tensors.append(tensor)
+    return vectorize
 
         
                  
@@ -128,6 +145,7 @@ def ExtraerVectorice(row):
 
 
 def main():
+    model_types = ['bert', 'deberta'] 
     parser = argparse.ArgumentParser(
         description="PAN23 Style Change Detection Task: Output Verifier"
     )
@@ -142,6 +160,15 @@ def main():
         type=str,
         help="folder containing input files for task (txt)",
         required=True,
+    )
+    parser.add_argument(
+        "--modelType",
+        type=str,
+        default="bert",
+        help="type model to use",
+        required=False,
+        choices=model_types # limitar opciones a 'bert' o 'deberta'
+
     )
 
     args = parser.parse_args()
