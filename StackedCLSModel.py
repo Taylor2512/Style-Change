@@ -1,4 +1,5 @@
 import ast
+from pickletools import optimize
 import re
 from sklearn import datasets
 from sklearn.preprocessing import binarize
@@ -16,9 +17,10 @@ class StackedCLSModel(nn.Module):
         self.model=model
         self.tokenizer=tokenizer
         self.model_type=model_type
-        self.Fusion = nn.Parameter(torch.zeros(1, 12))
+        self.Fusion = nn.Parameter(torch.zeros(12,1))
         self.lin1 = nn.Linear(768, 128)
         self.lin2 = nn.Linear(128, 2)
+        model = nn.Linear(10, 2) 
     
     def forward(self, input_ids, input_masks,targets):
     #output = self.bert(input_ids, input_masks)
@@ -29,8 +31,8 @@ class StackedCLSModel(nn.Module):
       cls_tensors = torch.stack([outputs[1][n][0,0] for n in range(1,13)]) #ojo cómo leo la columna outputs
     
      t_cls_tensors = cls_tensors.transpose(1,0)
-    #pooled_layers = torch.nn(t_cls_tensors, self.Fusion).squeeze()
-     pooled_layers = nn.functional.linear(t_cls_tensors, self.Fusion).squeeze()
+     pooled_layers = torch.mm(t_cls_tensors, self.Fusion).squeeze()
+     #pooled_layers = nn.functional.linear(t_cls_tensors, self.Fusion).squeeze()
      x = self.lin1(pooled_layers)
       #x = torch.nn.Dropout(0.3)
       #x = torch.nn.tanh(x) # o torch.nn.ReLU(x)
@@ -38,11 +40,16 @@ class StackedCLSModel(nn.Module):
      x = nn.Tanh()(x) # o torch.nn.ReLU(x)
      logits = self.lin2(x)
      loss = None
-     if targets:
+     #if targets:
           #loss = torch.nn.BCEWithLogitsLoss(logits, targets)
-       loss = nn.CrossEntropyLoss(logits, targets)  #ojo xq los labels los hace multiclase, ya no suso el BCE
-       print("loss:", loss)
-      
+     loss_fn = nn.CrossEntropyLoss()
+     loss = loss_fn(logits, targets.float())
+#ojo xq los labels los hace multiclase, ya no suso el BCE
+     print("loss:", loss)
+     # Realizar un paso de entrenamiento
+     perdida=loss.item()
+     print('Pérdida:', loss.item())
+
      return logits, loss
 
  

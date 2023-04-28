@@ -106,7 +106,7 @@ def GenerarSolucion(args, carpeta):
     dataframe = pd.read_excel(os.path.join(train,carpeta+'-train','textosproblem.xlsx'))
     datframe2 = pd.read_csv(os.path.join(train,carpeta+'-validation','textosproblem.csv'))
     
-    dataframe=dataframe.iloc[:2,:]
+    dataframe=dataframe.iloc[:1,:]
     vectorized_text = []
     vectores = []
     for index, row in dataframe.iterrows():

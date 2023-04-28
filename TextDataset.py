@@ -32,7 +32,7 @@ class TextDataset(Dataset):
             'position': item,
             'input_ids': encoding['input_ids'].flatten(),
             'attention_mask': encoding['attention_mask'].flatten(),
-            'labels': torch.tensor([1 - label, label])
+            'labels':  torch.tensor([1 - label, label])
         }
      
  
