@@ -25,13 +25,14 @@ class TextDataset(Dataset):
             return_tensors='pt',
             max_length=self.max_len,
             padding='max_length',
+            return_attention_mask = True,# Obtener la máscara de atención
             truncation=True
         )
 
         return {
             'position': item,
-            'input_ids': encoding['input_ids'].flatten(),
-            'attention_mask': encoding['attention_mask'].flatten(),
+            'input_ids': encoding['input_ids'],
+            'attention_mask': encoding['attention_mask'],
             'labels':  torch.tensor([1 - label, label])
         }
      

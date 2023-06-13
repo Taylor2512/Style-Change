@@ -5,3 +5,7 @@
 # Cache files
 __pycache__/
 __pycache__/*.pyc
+
+# Virtual Environments
+.venv/
+.venv/*
