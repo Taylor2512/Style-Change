@@ -63,9 +63,9 @@ def main():
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
         MODEL_TYPE=args.modelType
-    # for i in range(1, 4):
-    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-    #     SaveDataSet(args, carpeta)
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        SaveDataSet(args, carpeta)
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         GenerarSolucion(args, carpeta,MODEL)
@@ -142,7 +142,9 @@ def SaveValidationOrTrain(folder,args):
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
     elif args.modelType=='deberta':
+        
        data = [{'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
+       datatrain = pd.DataFrame(data)
        datatrain.to_json(os.path.join(folder, 'ebertaTokenizer.json'), orient='records')
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')

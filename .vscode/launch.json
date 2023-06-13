@@ -4,12 +4,15 @@
     // Para más información, visite: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
              "args": [
                  "--input",
                 "C:\\DataSets\\release", 
                 "--output", 
-                "C:\\DataSets\\release"
+                "C:\\DataSets\\release",
+                "--modelType",
+                "deberta"
             ],
             "name": "Python: archivo actual",
             "type": "python",
