@@ -136,14 +136,14 @@ def SaveValidationOrTrain(folder,args):
         Lista.append(textos)
     
     if args.modelType=='mdeberta': 
-       data = [{'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
+       data = [{ 'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same ,Id in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
        datatrain.to_json(os.path.join(folder, 'mdebertaTokenizer.json'), orient='records')
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
     elif args.modelType=='deberta':
         
-       data = [{'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
+       data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
        datatrain.to_json(os.path.join(folder, 'ebertaTokenizer.json'), orient='records')
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
