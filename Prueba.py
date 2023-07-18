@@ -1,39 +1,27 @@
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
-import os
-import numpy as np
-import torch
-import torch.nn as nn
-from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
-import os
-from glob import glob
 import argparse
-import json
-import warnings
-from enum import Enum
-import pandas as pd
-import ast
-from typing import List
-from TextoConParrafos import TextoConParrafos
-from TextDataset import TextDataset
 import pandas as pd
 import numpy as np
 import datetime
 from torch.utils.data import Dataset, DataLoader
 import torch
 import torch.nn as nn
-import re
+import re,os
 import unicodedata
 import matplotlib.pyplot as plt
 import itertools
 import sklearn.metrics as metrics
 from sklearn import metrics, feature_selection
-from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
+from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
 from transformers import Trainer, TrainingArguments, EvalPrediction,DataCollatorWithPadding, Trainer, TrainingArguments, AutoModelForSequenceClassification
 from transformers import BertModel, BertConfig, BertTokenizer, DebertaConfig, DebertaModel, DebertaTokenizer,DebertaV2Model, DebertaV2Config,DebertaV2Tokenizer,AutoTokenizer,AutoModel,AutoConfig
+import optuna.visualization as optuna_visualization
+import plotly
+import optuna
+import numpy as np
+
 from transformers.modeling_outputs import SequenceClassifierOutput
 from bs4 import BeautifulSoup
+from TextoConParrafos import TextoConParrafos
 def SaveDataSet(args, carpeta):
     folder= args.input
     folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
@@ -43,6 +31,115 @@ def SaveDataSet(args, carpeta):
     folderComplete = os.path.join(folder, carpeta, carpeta+'-validation')
     if os.path.exists(folderComplete):
         SaveValidationOrTrain(folderComplete,args)
+
+def GenerarSolucion(argss, carpeta):
+    dataTrainer=None
+    dataEvaluation=None
+    train= os.path.join(argss.input, carpeta) 
+    if argss.modelType=='mdeberta': 
+        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
+    elif argss.modelType=='deberta':
+        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
+    dataTrainer=   dataTrainer.iloc[:5,:]
+    dataEvaluation=   dataEvaluation.iloc[:5,:]
+    class MyDataset(Dataset):             # define una nueva clase MyDataset que hereda de Dataset
+          def __init__(self, dataframe):    # define el constructor  "__init__"  que toma un solo argumento dataframe
+              #print(dataframe)
+              self.len = len(dataframe)   # calcula la longitud de la entrada dataframe usando la funcion "len" y la almacena como una variable de instancia "self.len"
+              self.data = dataframe       # se asigna la entrada dataframe a una variable de instancia "self.data"
+
+
+          def __getitem__(self, index):   # define el método "__getitem__" que toma un solo argumento index
+              ''' el metodo __getitem__ devuelve un diccionario que contiene cuatro claves: 'input_ids', 'attention_mask', 'labels'y 'added_features' '''
+
+              input_ids = torch.tensor(self.data.text_vec.iloc[index]).cpu() # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
+              #attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
+              #
+              mask = torch.ones(input_ids.shape,dtype=int)#Crear un tensor con el mismo tamaño que input_ids lleno de unos:
+              pad_positions = (input_ids == 0)#Identificar las posiciones en input_ids que contienen el token especial [PAD]
+              mask[pad_positions] = 0 #Actualizar las posiciones correspondientes en mask a cero:
+              attention_mask = mask #Actualizar las posiciones correspondientes en mask a cero:
+              #
+              label = self.data.same.iloc[index] # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
+              targets = torch.tensor([1 - label, label])  #ojo probar ESTO ES NUEVO
+              return {
+                  'input_ids': input_ids,               # devuelve las características de entrada para el punto de datos
+                  'attention_mask': attention_mask,     # devuelve la máscara de atención para el punto de datos
+                  'labels': targets                    # devuelve un valor escalar que representa la puntuación de complejidad
+              }
+
+          def __len__(self):
+              return self.len   # devuelve la longitud del conjunto de datos personalizado
+          
+    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
+    
+    class StackedCLSModel(nn.Module):
+          def __init__(self, model=MODEL, model_type=MODEL_TYPE):
+              super(StackedCLSModel, self).__init__()
+              self.model = MODEL
+              self.model_type = MODEL_TYPE
+              self.Fusion = nn.Parameter(torch.zeros(12, 1))
+              self.dropout = nn.Dropout(0.2)
+              self.funActivacion = nn.ReLU()
+              self.lin1 = nn.Linear(768, 128)
+              self.lin2 = nn.Linear(128, 2)
+              self.loss_func = nn.CrossEntropyLoss()
+              self.init = 0
+          def forward(self, input_ids, attention_mask, labels=None):
+            outputs = self.model(input_ids, attention_mask=attention_mask)
+            if self.model_type == "mdeberta":
+              cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+            elif self.model_type == "deberta":
+              cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+            t_cls_tensors = cls_tensors.transpose(1, 0)
+            t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
+            x = self.lin1(t_cls_tensors_mean)
+            x = self.dropout(x)
+            x = self.funActivacion(x)
+            logit = self.lin2(x)
+            loss = None
+            if labels is not None:
+              loss = self.loss_func(logit, labels.float())
+            return SequenceClassifierOutput(loss=loss, logits=logit)
+        
+          def predict(self, input_ids, attention_mask):
+              logits = self.forward(input_ids, attention_mask, labels=None)
+              predicciones = logits.logits.argmax(dim=1)
+              predicciones =np.argmax(predicciones.tolist(),axis=-1)
+              return predicciones.tolist()
+ 
+
+    model = StackedCLSModel(MODEL, argss.modelType)
+    trainer = Trainer(model=model,
+                      args=arguments,
+                      train_dataset=train_set,
+                      eval_dataset=eval_dataset,
+                      compute_metrics=compute_metrics)
+    def objective(trial):
+        # Definir los hiperparámetros a sintonizar con Optuna
+        learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
+        num_layers = trial.suggest_int('num_layers', 1, 4)
+        # ...
+    
+        # Crear el modelo con los hiperparámetros sugeridos
+     
+      
+        # Entrenar el modelo
+        trainer.train()
+    
+        # Devolver la métrica que deseas optimizar (por ejemplo, precisión)
+        return trainer.evaluate();
+    
+    study = optuna.create_study(direction='maximize')  # Cambia a 'minimize' si deseas minimizar la métrica
+    study.optimize(objective, n_trials=7)  # Ajusta el número de ensayos según tus necesidades
+    study.best_trial.params
+    result=trainer.train()
+    
+    metrics=trainer.state.log_history
+    metrics=normalizar_propiedades(metrics)
+    generarGrafico(metrics)
 
 
 def main():
@@ -61,14 +158,15 @@ def main():
     elif args.modelType=='deberta':
         tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
-        MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
+        MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
+    # for i in range(1, 4):
+    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+    #     SaveDataSet(args, carpeta)
+
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        SaveDataSet(args, carpeta)
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        GenerarSolucion(args, carpeta,MODEL)
+        GenerarSolucion(args, carpeta)
 
 def remove_html_tags(text):
     soup = BeautifulSoup(text, "html.parser")
@@ -153,49 +251,27 @@ def SaveValidationOrTrain(folder,args):
 arguments = TrainingArguments(
     output_dir='/output',  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
     evaluation_strategy='epoch',  # Evaluación del modelo al final de cada época
-    num_train_epochs=7,  # Número total de épocas de entrenamiento
+    num_train_epochs=1,  # Número total de épocas de entrenamiento
     per_device_train_batch_size=16,  # Tamaño del lote de entrenamiento por dispositivo. Ajustar según la memoria GPU disponible
     per_device_eval_batch_size=16,  # Tamaño del lote de evaluación por dispositivo. Ajustar según la memoria GPU disponible
-    learning_rate=5e-5,  # Tasa de aprendizaje utilizada en el entrenamiento
-    overwrite_output_dir=True,  # Sobrescribir el directorio de salida si ya existe
-    remove_unused_columns=False,  # No eliminar columnas no utilizadas del conjunto de datos
-    logging_dir='/logs',  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
-    logging_steps=10,  # Número de pasos después de los cuales se realizará el registro
-    save_strategy='epoch',  # Estrategia de guardado del modelo: al final de cada época
-    save_total_limit=10,  # Límite total de modelos guardados
-    load_best_model_at_end=True,  # Cargar el mejor modelo al final del entrenamiento
-    warmup_steps=10,  # Número de pasos de calentamiento antes de ajustar la tasa de aprendizaje
-    weight_decay=0.03,  # Factor de decaimiento de peso para la regularización L2
-    adam_epsilon=1e-8,  # Epsilon para el optimizador Adam, utilizado para la estabilidad numérica
-    adam_beta1=0.5,  # Coeficiente beta1 para el optimizador Adam
-    adam_beta2=0.5,  # Coeficiente beta2 para el optimizador Adam
-    lr_scheduler_type='cosine',  # Tipo de programador de tasa de aprendizaje: programador coseno curva de aprendizaje  entre el eje x
-    gradient_accumulation_steps=1,  # Número de pasos de acumulación de gradiente antes de realizar una actualización de parámetros
-    max_grad_norm=5.0,  # Valor máximo de la norma del gradiente para evitar explosiones de gradiente
-    save_steps=10  # Número de pasos después de los cuales se guarda el modelo
+    learning_rate=5e-5  # Tasa de aprendizaje utilizada en el entrenamiento
+    # overwrite_output_dir=True,  # Sobrescribir el directorio de salida si ya existe
+    # remove_unused_columns=False,  # No eliminar columnas no utilizadas del conjunto de datos
+    # logging_dir='/logs',  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
+    # logging_steps=10,  # Número de pasos después de los cuales se realizará el registro
+    # save_strategy='epoch',  # Estrategia de guardado del modelo: al final de cada época
+    # save_total_limit=10,  # Límite total de modelos guardados
+    # load_best_model_at_end=True,  # Cargar el mejor modelo al final del entrenamiento
+    # warmup_steps=10,  # Número de pasos de calentamiento antes de ajustar la tasa de aprendizaje
+    # weight_decay=0.03,  # Factor de decaimiento de peso para la regularización L2
+    # adam_epsilon=1e-8,  # Epsilon para el optimizador Adam, utilizado para la estabilidad numérica
+    # adam_beta1=0.5,  # Coeficiente beta1 para el optimizador Adam
+    # adam_beta2=0.5,  # Coeficiente beta2 para el optimizador Adam
+    # lr_scheduler_type='cosine',  # Tipo de programador de tasa de aprendizaje: programador coseno curva de aprendizaje  entre el eje x
+    # gradient_accumulation_steps=1,  # Número de pasos de acumulación de gradiente antes de realizar una actualización de parámetros
+    # max_grad_norm=5.0,  # Valor máximo de la norma del gradiente para evitar explosiones de gradiente
+    # save_steps=10  # Número de pasos después de los cuales se guarda el modelo
     )
-def GenerarSolucion(argss, carpeta,MODEL):
-    dataTrainer=None
-    dataEvaluation=None
-    train= os.path.join(argss.input, carpeta) 
-    if argss.modelType=='mdeberta': 
-        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
-    elif argss.modelType=='deberta':
-        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
-    dataTrainer=   dataTrainer.iloc[:10,:]
-    dataEvaluation=   dataEvaluation.iloc[:5,:]
-    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)
-    model = StackedCLSModel(MODEL, argss.modelType)
-    trainer = Trainer(model=model,args=arguments,train_dataset=train_set,eval_dataset=eval_dataset, compute_metrics=compute_metrics)
-    result=trainer.train()
-    
-    metrics=trainer.state.log_history
-    metrics=normalizar_propiedades(metrics)
-    generarGrafico(metrics)
-
-
 
 
 def group_by_property(metrics):
@@ -255,69 +331,7 @@ def normalizar_propiedades(lista):
     return lista
 
     
-    
-class MyDataset(Dataset):             # define una nueva clase MyDataset que hereda de Dataset 
-    def __init__(self, dataframe):    # define el constructor  "__init__"  que toma un solo argumento dataframe
-        #print(dataframe)
-        self.len = len(dataframe)   # calcula la longitud de la entrada dataframe usando la funcion "len" y la almacena como una variable de instancia "self.len"
-        self.data = dataframe       # se asigna la entrada dataframe a una variable de instancia "self.data"
-        
-
-    def __getitem__(self, index):   # define el método "__getitem__" que toma un solo argumento index
-        ''' el metodo __getitem__ devuelve un diccionario que contiene cuatro claves: 'input_ids', 'attention_mask', 'labels'y 'added_features' '''
-        
-        input_ids = torch.tensor(self.data.text_vec.iloc[index]).cpu() # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
-        #attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
-        #
-        mask = torch.ones(input_ids.shape,dtype=int)#Crear un tensor con el mismo tamaño que input_ids lleno de unos:
-        pad_positions = (input_ids == 0)#Identificar las posiciones en input_ids que contienen el token especial [PAD] 
-        mask[pad_positions] = 0 #Actualizar las posiciones correspondientes en mask a cero:
-        attention_mask = mask #Actualizar las posiciones correspondientes en mask a cero:
-        #
-        label = self.data.same.iloc[index] # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
-        targets = torch.tensor([1 - label, label])  #ojo probar ESTO ES NUEVO
-        return {
-            'input_ids': input_ids,               # devuelve las características de entrada para el punto de datos
-            'attention_mask': attention_mask,     # devuelve la máscara de atención para el punto de datos
-            'labels': targets                    # devuelve un valor escalar que representa la puntuación de complejidad
-        }
-            
-    def __len__(self):    
-        return self.len   # devuelve la longitud del conjunto de datos personalizado
-class StackedCLSModel(nn.Module):
-      def __init__(self, model, model_type):
-        super(StackedCLSModel, self).__init__()
-        self.model = model
-        self.model_type = model_type
-        self.Fusion = nn.Parameter(torch.zeros(12, 1))
-        self.dropout = nn.Dropout(0.2)
-        self.funActivacion = nn.ReLU()
-        self.lin1 = nn.Linear(768, 128)
-        self.lin2 = nn.Linear(128, 2)
-        self.loss_func = nn.CrossEntropyLoss()
-        self.init = 0 
-      def forward(self, input_ids, attention_mask, labels=None):
-        outputs = self.model(input_ids, attention_mask=attention_mask)
-        # if self.model_type == "bert":
-        #   cls_tensors = torch.stack([outputs[2][n][:, 0, :] for n in range(1, 13)])
-        # elif self.model_type == "deberta":
-        cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
-        t_cls_tensors = cls_tensors.transpose(1, 0)
-        t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
-        x = self.lin1(t_cls_tensors_mean)
-        x = self.dropout(x)
-        x = self.funActivacion(x)
-        logit = self.lin2(x)
-        loss = None
-        if labels is not None:
-          loss = self.loss_func(logit, labels.float())
-          loss = loss.mean()         
-        return SequenceClassifierOutput(loss=loss, logits=logit)
-    
-      def predict(self, input_ids, attention_mask):
-        logits = self.forward(input_ids, attention_mask, labels=None)
-        return (logits.argmax()) * 1
-
+ 
 def c_at_1(train_data, test_data, threshold=0.5):
       n = float(len(test_data))
       nc, nu = 0.0, 0.0
