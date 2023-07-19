@@ -1,4 +1,45 @@
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+import os
+import numpy as np
+import torch
+import torch.nn as nn
+from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
+import os
+from glob import glob
 import argparse
+import json
+import warnings
+from enum import Enum
+import pandas as pd
+import ast
+from typing import List
+from TextoConParrafos import TextoConParrafos
+from TextDataset import TextDataset
+import pandas as pd
+import numpy as np
+import datetime
+from torch.utils.data import Dataset, DataLoader
+import torch
+import torch.nn as nn
+import re
+import re,os
+import unicodedata
+import matplotlib.pyplot as plt
+import itertools
+import sklearn.metrics as metrics
+from sklearn import metrics, feature_selection
+from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
+from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
+from transformers import Trainer, TrainingArguments, EvalPrediction,DataCollatorWithPadding, Trainer, TrainingArguments, AutoModelForSequenceClassification
+from transformers import BertModel, BertConfig, BertTokenizer, DebertaConfig, DebertaModel, DebertaTokenizer,DebertaV2Model, DebertaV2Config,DebertaV2Tokenizer,AutoTokenizer,AutoModel,AutoConfig
+import optuna.visualization as optuna_visualization
+import plotly
+import optuna
+import numpy as np
+ 
+import random
 import pandas as pd
 import numpy as np
 import datetime
@@ -46,20 +87,34 @@ def main():
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
-    # for i in range(1, 4):
-    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-    #     SaveDataSet(args, carpeta)
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        SaveDataSet(args, carpeta)
 
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         GenerarModelo(args, carpeta)
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        GenerarSolucion(args, carpeta)
+
+def GenerarSolucion(argss, carpeta):
+    datatest=None
+    train= os.path.join(argss.input, carpeta) 
+    if argss.modelType=='mdeberta': 
+        datatest = pd.read_json(os.path.join(train,carpeta+'-test','mdebertaTokenizer.json'))
+    elif argss.modelType=='deberta':
+        datatest = pd.read_json(os.path.join(train,carpeta+'-test','ebertaTokenizer.json'))
+    
+    direccion=GenerarDirectorio('best_model')
+    rutamodel=os.path.join(direccion,'best_model.pth')
+    modelo_cargado = torch.load(rutamodel)
 
 def SaveDataSet(args, carpeta):
     folder= args.input
     folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
     if os.path.exists(folderComplete):
         SaveValidationOrTrain(folderComplete,args)
-
     folderComplete = os.path.join(folder, carpeta, carpeta+'-validation')
     if os.path.exists(folderComplete):
         SaveValidationOrTrain(folderComplete,args)
@@ -70,17 +125,13 @@ def GenerarModelo(argss, carpeta):
     train= os.path.join(argss.input, carpeta) 
     if argss.modelType=='mdeberta': 
         dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','mdebertaTokenizer.json'))
     elif argss.modelType=='deberta':
         dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','ebertaTokenizer.json'))
     dataTrainer=   dataTrainer.iloc[:5,:]
     dataEvaluation=   dataEvaluation.iloc[:5,:]
-          
     train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
-    
-    
-
     model = StackedCLSModel(MODEL, argss.modelType)
     trainer = Trainer(model=model,
                       args=arguments,
@@ -91,17 +142,11 @@ def GenerarModelo(argss, carpeta):
         # Definir los hiperparámetros a sintonizar con Optuna
         learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
         num_layers = trial.suggest_int('num_layers', 1, 4)
-        # ...
-    
-        # Crear el modelo con los hiperparámetros sugeridos
-     
-      
         # Entrenar el modelo
         trainer.train()
     
         # Devolver la métrica que deseas optimizar (por ejemplo, precisión)
         return trainer.evaluate();
-    
     study = optuna.create_study(direction='maximize')  # Cambia a 'minimize' si deseas minimizar la métrica
     study.optimize(objective, n_trials=2)  # Ajusta el número de ensayos según tus necesidades
     if len(study.best_trials) != 0:
@@ -112,7 +157,6 @@ def GenerarModelo(argss, carpeta):
         num_layers = best_trial.params['num_layers']
         arguments.num_train_epochs=num_layers
      
-  
     trainer = Trainer(model=model,
                       args=arguments,
                       train_dataset=train_set,
@@ -125,9 +169,7 @@ def GenerarModelo(argss, carpeta):
     direccion=GenerarDirectorio('best_model')
     rutamodel=os.path.join(direccion,'best_model.pth')
     torch.save(trainer.model, rutamodel)
-
-
-
+    
 def GenerarDirectorio(name):
     rutabase = os.getcwd()  # Obtiene la ruta base del proyecto actual
     directorio = os.path.join(rutabase, name)
@@ -198,21 +240,37 @@ def SaveValidationOrTrain(folder,args):
         textos = TextoConParrafos()
         textos = GetProblemsFileTxtAndJson(folder, problem_id)
         Lista.append(textos)
-    
+    # Obtener el número de elementos a tomar
+    num_instances = int(len(Lista) * 0.8)
+    # Copiar la lista original para preservar su orden
+    copia_lista = Lista.copy()
+    # Tomar el 80% de los elementos en una nueva lista
+    lista_80porciento = random.sample(copia_lista, num_instances)
+    # Eliminar los elementos seleccionados de la copia de la lista original
+    for elemento in lista_80porciento:
+        copia_lista.remove(elemento)
+    # Los elementos restantes corresponden al 20% restante
+    lista_20porciento = copia_lista
+    if "train" in os.path.basename(folder):    
+        SaveDatasetComplete(folder, args, lista_80porciento)
+        
+        SaveDatasetComplete(folder.replace('train','test'), args, lista_20porciento)
+
+def SaveDatasetComplete(folder, args, Lista):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     if args.modelType=='mdeberta': 
        data = [{ 'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same ,Id in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
-       datatrain.to_json(os.path.join(folder, 'mdebertaTokenizer.json'), orient='records')
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
+       datatrain.to_json(os.path.join(folder, 'mdebertaTokenizer.json'), orient='records')
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
     elif args.modelType=='deberta':
-        
        data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
        datatrain.to_json(os.path.join(folder, 'ebertaTokenizer.json'), orient='records')
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
-
 # Definir bien los argumentos
 arguments = TrainingArguments(
     output_dir='output',  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
@@ -238,8 +296,6 @@ arguments = TrainingArguments(
     max_grad_norm=5.0,  # Valor máximo de la norma del gradiente para evitar explosiones de gradiente
     save_steps=10  # Número de pasos después de los cuales se guarda el modelo
     )
-
-
 def group_by_property(metrics):
     properties = set()
     for metric in metrics:
@@ -319,7 +375,6 @@ def GenerarMatrizConfuncion(matriz_confusion):
     plt.tight_layout()
 
     plt.savefig(os.path.join(ruta, f'{date_string}_matrizConfusion.png'), dpi=1800,bbox_inches='tight')
-        
 
 class MyDataset(Dataset):             # define una nueva clase MyDataset que hereda de Dataset
           def __init__(self, dataframe):    # define el constructor  "__init__"  que toma un solo argumento dataframe
@@ -382,8 +437,7 @@ class StackedCLSModel(nn.Module):
               logits = self.forward(input_ids, attention_mask, labels=None)
               predicciones = logits.logits.argmax(dim=1)
               predicciones =np.argmax(predicciones.tolist(),axis=-1)
-              return predicciones.tolist()
-        
+              return predicciones.tolist()        
 def normalizar_propiedades(lista):
     for diccionario in lista:
         for propiedad in list(diccionario.keys()):
@@ -391,9 +445,6 @@ def normalizar_propiedades(lista):
             if propiedad != propiedad_normalizada:
                 diccionario[propiedad_normalizada] = diccionario.pop(propiedad)
     return lista
-
-    
- 
 def c_at_1(train_data, test_data, threshold=0.5):
       n = float(len(test_data))
       nc, nu = 0.0, 0.0
