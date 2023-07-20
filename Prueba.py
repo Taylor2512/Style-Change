@@ -88,13 +88,13 @@ def main():
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
-    # for i in range(1, 4):
-    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-    #     SaveDataSet(args, carpeta)
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        SaveDataSet(args, carpeta)
 
-    # for i in range(1, 4):
-    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-    #     GenerarModelo(args, carpeta)
+    for i in range(1, 4):
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+        GenerarModelo(args, carpeta)
     
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
@@ -107,11 +107,9 @@ def GenerarSolucion(argss, carpeta):
         datatest = pd.read_json(os.path.join(train,carpeta+'-test','mdebertaTokenizer.json'))
     elif argss.modelType=='deberta':
         datatest = pd.read_json(os.path.join(train,carpeta+'-test','ebertaTokenizer.json'))
-    
     direccion=GenerarDirectorio('best_model')
     rutamodel=os.path.join(direccion,'best_model.pth')
     modelo_cargado = torch.load(rutamodel)
-    
     # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
     df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
     # Agrupar los datos por el valor de "id"
@@ -123,7 +121,6 @@ def GenerarSolucion(argss, carpeta):
     folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
     if not os.path.exists(folderComplete):
         os.makedirs(folderComplete)
-
     # Recorrer los grupos y crear un DataFrame agrupado por cada grupo
     for group_id, group_data in grouped_df:
         # Crear un nuevo DataFrame agrupado por ID
@@ -134,10 +131,8 @@ def GenerarSolucion(argss, carpeta):
         dataforinstans =dataframes_list[index]
         mydata = MyDataset(dataforinstans)
         instansc= dataforinstans['id'].iloc[0]
-        
         # Crear un DataLoader para recorrer el dataset
         dataloader = DataLoader(mydata, batch_size=16, shuffle=True)  # Ajusta el tamaño del lote según tus necesidades
-        
         # Recorrer el DataLoader
         for batch in dataloader:
             input_ids = batch['input_ids']
@@ -300,7 +295,7 @@ def SaveDatasetComplete(folder, args, Lista):
     if not os.path.exists(folder):
         os.makedirs(folder)
     if args.modelType=='mdeberta': 
-       data = [{ 'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same ,Id in zip(o.nuevoparrafos, o.changes)]
+       data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
        datatrain.to_json(os.path.join(folder, 'mdebertaTokenizer.json'), orient='records')

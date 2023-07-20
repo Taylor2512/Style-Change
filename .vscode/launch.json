@@ -12,7 +12,7 @@
                 "--output", 
                 "C:\\DataSets\\release",
                 "--modelType",
-                "deberta"
+                "mdeberta"
             ],
             "name": "Python: archivo actual",
             "type": "python",
