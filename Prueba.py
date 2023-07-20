@@ -68,6 +68,7 @@ MODEL = None
 MODEL_TYPE = None
 
 def main():
+    
     model_types = ['mdeberta', 'deberta'] 
     parser = argparse.ArgumentParser(description="PAN23 Style Change Detection Task: Output Verifier")
     parser.add_argument("--output",type=str,help="folder containing output/solution files (json)",required=True,)
@@ -87,13 +88,14 @@ def main():
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        SaveDataSet(args, carpeta)
+    # for i in range(1, 4):
+    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+    #     SaveDataSet(args, carpeta)
 
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        GenerarModelo(args, carpeta)
+    # for i in range(1, 4):
+    #     carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
+    #     GenerarModelo(args, carpeta)
+    
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         GenerarSolucion(args, carpeta)
@@ -109,7 +111,45 @@ def GenerarSolucion(argss, carpeta):
     direccion=GenerarDirectorio('best_model')
     rutamodel=os.path.join(direccion,'best_model.pth')
     modelo_cargado = torch.load(rutamodel)
+    
+    # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
+    df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
+    # Agrupar los datos por el valor de "id"
+    grouped_df = df.groupby("id")
+    # Crear una lista para almacenar los DataFrames agrupados
+    dataframes_list = []
+    folder= argss.input
 
+    folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
+    if not os.path.exists(folderComplete):
+        os.makedirs(folderComplete)
+
+    # Recorrer los grupos y crear un DataFrame agrupado por cada grupo
+    for group_id, group_data in grouped_df:
+        # Crear un nuevo DataFrame agrupado por ID
+        grouped_dataframe = pd.DataFrame(group_data)
+        # Agregar el DataFrame agrupado a la lista
+        dataframes_list.append(grouped_dataframe)
+    for index in range(len(dataframes_list)):
+        dataforinstans =dataframes_list[index]
+        mydata = MyDataset(dataforinstans)
+        instansc= dataforinstans['id'].iloc[0]
+        
+        # Crear un DataLoader para recorrer el dataset
+        dataloader = DataLoader(mydata, batch_size=16, shuffle=True)  # Ajusta el tamaño del lote según tus necesidades
+        
+        # Recorrer el DataLoader
+        for batch in dataloader:
+            input_ids = batch['input_ids']
+            attention_mask = batch['attention_mask']
+            labels = batch['labels']
+            predicciones=modelo_cargado.predict(input_ids, attention_mask,labels)
+            data={'changes': [predicciones]}
+            # Crear el DataFrame a partir de la lista de diccionarios
+            texts = pd.DataFrame(data) 
+            texts.to_json(os.path.join(folderComplete, f'solution-problem-{instansc}.json'), orient='records')
+                 
+    
 def SaveDataSet(args, carpeta):
     folder= args.input
     folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
@@ -433,10 +473,10 @@ class StackedCLSModel(nn.Module):
               loss = self.loss_func(logit, labels.float())
             return SequenceClassifierOutput(loss=loss, logits=logit)
         
-          def predict(self, input_ids, attention_mask):
+          def predict(self, input_ids, attention_mask,labels=None):
               logits = self.forward(input_ids, attention_mask, labels=None)
               predicciones = logits.logits.argmax(dim=1)
-              predicciones =np.argmax(predicciones.tolist(),axis=-1)
+            #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
               return predicciones.tolist()        
 def normalizar_propiedades(lista):
     for diccionario in lista:
