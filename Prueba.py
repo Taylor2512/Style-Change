@@ -75,6 +75,19 @@ import argparse
 MODEL = None
 MODEL_TYPE = None
 lstm_dict=None
+PATH_historial_optuna = None
+PATH_modelo = None
+PATH_parametros = None
+PATH_resultados_preds = None
+PATH_predicciones = None
+PATH_imagen_matriz = None
+PATH_grafico_optuna = None
+PATH_grafico_optuna_param = None
+PATH_result_train = None
+PATH_result_eval = None
+PATH_result_predict = None
+
+PATH_historial_optuna
 logging.basicConfig(filename='registro.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logs = []
@@ -123,9 +136,9 @@ def main():
     parser.add_argument("--output",type=str,help="folder containing output/solution files (json)",required=True,)
     parser.add_argument("--input",type=str,help="folder containing input files for task (txt)",required=True,)
     parser.add_argument("--modelType",type=str,default="mdeberta",help="type model to use",required=False,choices=model_types)
-    parser.add_argument("--instancesDataset",type=str,default=1,help="type model to use",required=False,choices=instancesDataset)
+    parser.add_argument("--instancesDataset",type=str,default=1,help="instance dataset to use",required=False,choices=instancesDataset)
     args = parser.parse_args()
-    global tokenizer, config, MODEL,MODEL_TYPE,date_string
+    global tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
     now = datetime.datetime.now()
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
     if args.modelType=='mdeberta': 
@@ -140,7 +153,21 @@ def main():
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
         logging.info("Modelo usado",args.modelType)
-    
+   
+    PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+    PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
+    # Guardar los mejores parametros en un archivo
+    PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
+    # Guardar graficas y resultados
+    PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
+    PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
+    PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
+    PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
+    PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
+    PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
+    PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
+    PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
+         
     if args.instancesDataset is not None:
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
         # SaveDataSet(args, carpeta)
@@ -148,20 +175,7 @@ def main():
         GenerarSolucion(args, carpeta)
     else:
         RecorrerDataset(args)
-PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
-PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
-# Guardar los mejores parametros en un archivo
-PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
-# Guardar graficas y resultados
-PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
-PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
-PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
-PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
-PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
-PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
-PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
-PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
-PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
+
 
 def RecorrerDataset(args):
     for i in range(1, 4):
@@ -318,7 +332,7 @@ def GenerarModelo(argss, carpeta):
     #----------------------------------------------------------------------------------------------------
     
     ### Grafico 1 ###
-    grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["f1", "accuracy"])
+    grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["eval_Accuracy-RC", "eval_F1-macro-RC","eval_loss"])
     # Ajustar el tamaño de la figura
     fig1 = grafico_optuna1.figure
     fig1.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
@@ -544,7 +558,7 @@ def SaveDatasetComplete(folder, args, Lista):
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
 # Definir bien los argumentos
 arguments = TrainingArguments(
-    output_dir=os.join(rutabase, 'output'),  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
+    output_dir=os.path.join(rutabase, 'output'),  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
     evaluation_strategy='epoch',  # Evaluación del modelo al final de cada época
     num_train_epochs=1,  # Número total de épocas de entrenamiento
     per_device_train_batch_size=16,  # Tamaño del lote de entrenamiento por dispositivo. Ajustar según la memoria GPU disponible
@@ -552,7 +566,7 @@ arguments = TrainingArguments(
     learning_rate=5e-5,  # Tasa de aprendizaje utilizada en el entrenamiento
     overwrite_output_dir=True,  # Sobrescribir el directorio de salida si ya existe
     remove_unused_columns=False,  # No eliminar columnas no utilizadas del conjunto de datos
-    logging_dir=os.join(rutabase, 'logsArgs'),  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
+    logging_dir=os.path.join(rutabase, 'logsArgs'),  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
     logging_steps=10,  # Número de pasos después de los cuales se realizará el registro
     save_strategy='epoch',  # Estrategia de guardado del modelo: al final de cada época
     save_total_limit=10,  # Límite total de modelos guardados
