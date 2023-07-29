@@ -73,6 +73,7 @@ import argparse
 
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
+model=None
 MODEL_TYPE = None
 lstm_dict=None
 PATH_historial_optuna = None
@@ -82,12 +83,12 @@ PATH_resultados_preds = None
 PATH_predicciones = None
 PATH_imagen_matriz = None
 PATH_grafico_optuna = None
+PATH_grafico_Matrix = None
 PATH_grafico_optuna_param = None
 PATH_result_train = None
 PATH_result_eval = None
 PATH_result_predict = None
-
-PATH_historial_optuna
+ 
 logging.basicConfig(filename='registro.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logs = []
@@ -110,13 +111,13 @@ lr_rate_max = 5e-5
 #epochs
 MIN_EPOCHS = 1
 MAX_EPOCHS = 5
+OPTUNA_EARLY_STOPING = 4 # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 #Batchs
-BATCHS_options = [16]
+BATCHS_options = [8,16,32,64]
+rutabase = "/content/drive/MyDrive/003"
 
-rutabase = os.getcwd()   
 def GenerarDirectorio(name):
-    rutabase = os.getcwd()  # Obtiene la ruta base del proyecto actual
     directorio = os.path.join(rutabase, name)
     if not os.path.exists(directorio):
         os.makedirs(directorio)
@@ -129,19 +130,19 @@ def format_time(seconds):
 
 
 def main():
-    
-    model_types = ['mdeberta', 'deberta'] 
-    instancesDataset = [1,2,3] 
+
+    model_types = ['mdeberta', 'deberta']
+    instancesDataset = [1,2,3]
     parser = argparse.ArgumentParser(description="PAN23 Style Change Detection Task: Output Verifier")
     parser.add_argument("--output",type=str,help="folder containing output/solution files (json)",required=True,)
     parser.add_argument("--input",type=str,help="folder containing input files for task (txt)",required=True,)
     parser.add_argument("--modelType",type=str,default="mdeberta",help="type model to use",required=False,choices=model_types)
-    parser.add_argument("--instancesDataset",type=str,default=1,help="instance dataset to use",required=False,choices=instancesDataset)
+    parser.add_argument("--instancesDataset",type=str,default=1,help="type model to use",required=False,choices=instancesDataset)
     args = parser.parse_args()
-    global tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
+    global model,PATH_grafico_Matrix, tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
     now = datetime.datetime.now()
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
-    if args.modelType=='mdeberta': 
+    if args.modelType=='mdeberta':
         tokenizer = AutoTokenizer.from_pretrained("microsoft/mdeberta-v3-base")
         config = AutoConfig.from_pretrained("microsoft/mdeberta-v3-base",output_hidden_states=True, output_attentions=True)
         MODEL = AutoModel.from_pretrained("microsoft/mdeberta-v3-base", config=config)
@@ -150,10 +151,10 @@ def main():
     elif args.modelType=='deberta':
         tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
-        MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
+        MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
         MODEL_TYPE=args.modelType
         logging.info("Modelo usado",args.modelType)
-   
+
     PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
     PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
     # Guardar los mejores parametros en un archivo
@@ -167,15 +168,34 @@ def main():
     PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
     PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
     PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
-         
+    PATH_grafico_Matrix = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}Grafico-Matrix-confunsion.png")
+    model=MODEL 
+   
     if args.instancesDataset is not None:
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
         # SaveDataSet(args, carpeta)
         GenerarModelo(args, carpeta)
+        print("Modelo generado")
+
         GenerarSolucion(args, carpeta)
+        print("solucion generada")
+
     else:
         RecorrerDataset(args)
-
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
+# Guardar los mejores parametros en un archivo
+PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
+# Guardar graficas y resultados
+PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
+PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
+PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
+PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
+PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
+PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
+PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
 
 def RecorrerDataset(args):
     for i in range(1, 4):
@@ -185,15 +205,20 @@ def RecorrerDataset(args):
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         GenerarModelo(args, carpeta)
-    
+
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         GenerarSolucion(args, carpeta)
 
 def GenerarSolucion(argss, carpeta):
+    # device=None
+    # device = torch.device('cuda')
+
+    print(" Generar Solucion")
+
     datatest=None
-    train= os.path.join(argss.input, carpeta) 
-    if argss.modelType=='mdeberta': 
+    train= os.path.join(argss.input, carpeta)
+    if argss.modelType=='mdeberta':
         datatest = pd.read_json(os.path.join(train,carpeta+'-test','mdebertaTokenizer.json'))
         # Leer el contenido del archivo JSON como una cadena
         with open(PATH_parametros, 'r') as file:
@@ -207,8 +232,10 @@ def GenerarSolucion(argss, carpeta):
             json_data = file.read()
         # Cargar el objeto JSON desde la cadena
         lstm_dict = json.loads(json_data)
-  
+
     modelo_cargado = StackedCLSModel(lstm_dict,MODEL, MODEL_TYPE)
+    modelo_cargado.to(device)
+    modelo_cargado.eval()
     modelo_cargado.load_state_dict(
     torch.load(PATH_modelo, map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
     df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
@@ -247,12 +274,13 @@ def GenerarSolucion(argss, carpeta):
             predict_test.append(data) #agregamos los datos en un array que continene el orden de las filas que vamos a predecir
 
             # Crear el DataFrame a partir de la lista de diccionarios
-   
-    predict_test = pd.DataFrame(predict_test)                
+
+    predict_test = pd.DataFrame(predict_test)
     # Agrupar las listas en una sola lista por cada variable
     predict_grouped = {
         'predict': [item for sublist in predict_test['predict'] for item in sublist],
         'labels': [item for sublist in predict_test['labels'] for item in sublist]}
+
 
     resultados_preds = metricas_preds(predict_grouped['predict'],predict_grouped['labels'])
 
@@ -260,7 +288,10 @@ def GenerarSolucion(argss, carpeta):
         # Guardar el diccionario como JSON en el archivo
         json.dump(resultados_preds, archivo)
 
-    matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])  
+    matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])
+    print("matriz Confunzion",matriz_confusion)
+    GenerarMatrizConfuncion(matriz_confusion)
+
 def SaveDataSet(args, carpeta):
     folder= args.input
     folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
@@ -271,10 +302,11 @@ def SaveDataSet(args, carpeta):
         SaveValidationOrTrain(folderComplete,args)
 
 def GenerarModelo(argss, carpeta):
+    print("Generar Modelo")
     dataTrainer=None
     dataEvaluation=None
-    train= os.path.join(argss.input, carpeta) 
-    if argss.modelType=='mdeberta': 
+    train= os.path.join(argss.input, carpeta)
+    if argss.modelType=='mdeberta':
         dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
         dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','mdebertaTokenizer.json'))
     elif argss.modelType=='deberta':
@@ -282,7 +314,7 @@ def GenerarModelo(argss, carpeta):
         dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','ebertaTokenizer.json'))
     dataTrainer=   dataTrainer.iloc[:5,:]
     dataEvaluation=   dataEvaluation.iloc[:5,:]
-    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
+    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)
     def objective(trial: optuna.Trial):
         lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
                      'func_activation': trial.suggest_categorical("func_activ", activation_options)}
@@ -295,13 +327,14 @@ def GenerarModelo(argss, carpeta):
         arguments.per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
         arguments.per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
         model = StackedCLSModel(lstm_dict,MODEL,MODEL_TYPE) #inicialización del modelo
-        
+        model.to(device)
+
         trainer = Trainer(
             model=model,
             compute_metrics=compute_metrics,
             args=arguments,
             train_dataset=train_set,eval_dataset=eval_dataset)
-        
+
         trainer.train()
         #Se define cual sera el objetivo a minimizar o maximizar
         evaluation_result = trainer.evaluate()
@@ -312,7 +345,7 @@ def GenerarModelo(argss, carpeta):
         eval_loss = evaluation_result['eval_loss']
         #return validation_loss, train_loss , accuracy
         return f1_macro , accuracy,eval_loss
-    
+
     print('Activación del estudio de Optuna')
     study = optuna.create_study(directions=["maximize", "maximize","minimize"]) # multiples objetivos
     #para ejecución sin early stop
@@ -322,56 +355,56 @@ def GenerarModelo(argss, carpeta):
         study.optimize(objective, callbacks=[early_stopping_opt])
     except EarlyStoppingExceeded:
         print(f'EarlyStopping Exceeded: No hay nuevos mejores puntajes en iteraciones {OPTUNA_EARLY_STOPING}')
-    
+
     #### Guardar historial ###
     trials_df = study.trials_dataframe()
     trials_df.to_csv(PATH_historial_optuna, index=False)
-      
+
     #----------------------------------------------------------------------------------------------------
     #                    Gráficas
     #----------------------------------------------------------------------------------------------------
-    
+
     ### Grafico 1 ###
     grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["eval_Accuracy-RC", "eval_F1-macro-RC","eval_loss"])
     # Ajustar el tamaño de la figura
     fig1 = grafico_optuna1.figure
     fig1.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
     fig1.savefig(PATH_grafico_optuna, dpi=400)  # Guardado de imagen
-    
-    
+
+
     ### Grafico 2 ###
     grafico_optuna2 = optuna.visualization.matplotlib.plot_optimization_history(study, target=lambda t: t.values[0])
     # Ajustar el tamaño de la figura
     fig2 = grafico_optuna2.figure
     fig2.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
     fig2.savefig(PATH_grafico_optuna_param, dpi=400)  # Guardado de imagen
-   
-    
+
+
     #----------------------------------------------------------------------------------------------------
     #                    Parametros encontrados con Optuna
     #----------------------------------------------------------------------------------------------------
-    
+
     print(study.best_trials)
     resultados_optuna = max(study.best_trials, key=lambda t: t.values[1])
     print(resultados_optuna.values)
-    
+
     print('Encontrar los mejores parámetros del estudio')
-    
+
     best_dropout = float(resultados_optuna.params['dropout'])
     best_func_act = resultados_optuna.params['func_activ']
     best_lr = float(resultados_optuna.params['learning_rate'])
     best_epochs = float(resultados_optuna.params['num_epochs'])
     best_batch = resultados_optuna.params['batch_opt']
-    
+
     print('Extraer los mejores parámetros de estudio')
-    
+
     print(f'El mejor dropout es: {best_dropout}')
     print(f'La mejor funcion de activación es: {best_func_act}')
     print(f'El mejor learning rate is: {best_lr}')
     print(f'El mejor epochs is: {best_epochs}')
     print(f'El mejor batch is: {best_batch}')
-    
-    
+
+
     print('Crear diccionario de los mejores hiperparámetros')
     best_hp_dict = {
         'dropout_rate' : best_dropout,
@@ -380,18 +413,18 @@ def GenerarModelo(argss, carpeta):
         'best_epochs': best_epochs,
         'best_batch' : best_batch
     }
-    
+
     # Abrir el archivo en modo escritura
     with open(PATH_parametros, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
-        json.dump(best_hp_dict, archivo) 
-    
+        json.dump(best_hp_dict, archivo)
+
     # Leer el contenido del archivo JSON como una cadena
     with open(PATH_parametros, 'r') as file:
         json_data = file.read()
-   
+
     # Cargar el objeto JSON desde la cadena
-    data_dict = json.loads(json_data) 
+    data_dict = json.loads(json_data)
     #----------------------------------------------------------------------------------------------------
     #                    Entrenamiento con los mejores parametros
     #----------------------------------------------------------------------------------------------------
@@ -401,11 +434,12 @@ def GenerarModelo(argss, carpeta):
                      'func_activation': best_func_act}
     else:
         lstm_dict = data_dict
-    
-        
+
+
     #model = None
     model = StackedCLSModel(lstm_dict,MODEL, MODEL_TYPE) #inicialización del modelo
-    
+    model.to(device)
+
     # definir bien los arg
       # configuracion o argumentos de la forma en que se realizará el entrenamiento y evaluacion del modelo
     arguments.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
@@ -415,42 +449,44 @@ def GenerarModelo(argss, carpeta):
     arguments.remove_unused_columns=False #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
     arguments.per_device_train_batch_size=best_batch #Tamaño del lote de entrenamiento por dispositivo
     arguments.per_device_eval_batch_size=best_batch #Tamaño del lote de evaluación por dispositivo
-    
+
     trainer = MyTrainer(
     model=model,
     compute_metrics=compute_metrics,
     args=arguments,
     train_dataset=train_set,
     eval_dataset=eval_dataset)
-    
-    start_time = time.time() 
+
+    start_time = time.time()
     result=trainer.train()
     end_time = time.time()
     # Calcular el tiempo total de entrenamiento en segundos
     training_time = end_time - start_time
-
+ 
     # Formatear el tiempo a horas, minutos y segundos
     formatted_time = format_time(training_time)
     print(f"Tiempo de entrenamiento: {formatted_time}")
-    
-    
+
+
     print("Training")
     evaluation_result = trainer.evaluate()
-    
+
     with open(PATH_result_train, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
         json.dump(result, archivo)
-    
+
     with open(PATH_result_eval, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
         json.dump(evaluation_result, archivo)
-    
+
 
 #----------------------------------------------------------------------------------------------------
 #                    Guardado del modelo
 #----------------------------------------------------------------------------------------------------
 
     torch.save(trainer.model.state_dict(), PATH_modelo)
+    model.to(device)
+    model.eval()
 
     #     metrics=trainer.state.log_history
     # metrics=normalizar_propiedades(metrics)
@@ -475,8 +511,8 @@ def vectorize_text(s0, s1, max_length):
     s1 = re.sub(r"[^a-zA-Záéíóú.,!?;:<>()$€\[\]]+", r" ", s1)   # reemplaza todas las coincidencias del patrón con un espacio
 
     #'''convierte la entrada de texto sin formato en un formato numérico que se puede introducir en un modelo de aprendizaje automático'''
-    input_ids = tokenizer.encode(   # utiliza el tokenizador previamente entrenado 
-      ''.join(s0), 
+    input_ids = tokenizer.encode(   # utiliza el tokenizador previamente entrenado
+      ''.join(s0),
       ''.join(s1),                       # para codificar una cadena "s0" en sus identificadores de token correspondientes
       add_special_tokens=True,      # especifica si se agregan tokens especiales al principio y al final de la secuencia de tokens
       max_length=max_length,        # especifica la longitud máxima de la secuencia de tokens resultante
@@ -536,15 +572,17 @@ def SaveValidationOrTrain(folder,args):
         copia_lista.remove(elemento)
     # Los elementos restantes corresponden al 20% restante
     lista_20porciento = copia_lista
-    if "train" in os.path.basename(folder):    
+    if "train" in os.path.basename(folder):
         SaveDatasetComplete(folder, args, lista_80porciento)
-        
+
         SaveDatasetComplete(folder.replace('train','test'), args, lista_20porciento)
+    else:
+        SaveDatasetComplete(folder, args, Lista)
 
 def SaveDatasetComplete(folder, args, Lista):
     if not os.path.exists(folder):
         os.makedirs(folder)
-    if args.modelType=='mdeberta': 
+    if args.modelType=='mdeberta':
        data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
        datatrain = pd.DataFrame(data)
        texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
@@ -602,7 +640,7 @@ def agrupar_propiedades(lista):
     return resultado
 
 def _getvalores(data,key):{
-  [metric[key] for metric in data if key in data]  
+  [metric[key] for metric in data if key in data]
 }
 
 def generarGrafico(metrics,numero=2):
@@ -635,17 +673,18 @@ def generarGrafico(metrics,numero=2):
     plt.tight_layout()
 
     plt.savefig(os.path.join(ruta, f'{date_string}_grafico.png'), dpi=1800,bbox_inches='tight')
-
 def GenerarMatrizConfuncion(matriz_confusion):
-    # Configurar el gráfico
+    # Configurar el gráfico y el tamaño de la figura
+    plt.figure(figsize=(10, 8))  # Ajusta el tamaño de la figura según tus necesidades
     plt.imshow(matriz_confusion, cmap='Blues', interpolation='nearest')
     plt.title('Matriz de Confusión')
     plt.colorbar()
 
     # Etiquetas de los ejes x e y
-    tick_marks = np.arange(len(matriz_confusion))
-    plt.xticks(tick_marks, ['Negativo', 'Positivo'])
-    plt.yticks(tick_marks, ['Negativo', 'Positivo'])
+    etiquetas = ['Negativo', 'Positivo']
+    tick_marks = np.arange(len(etiquetas))
+    plt.xticks(tick_marks, etiquetas)
+    plt.yticks(tick_marks, etiquetas)
 
     # Mostrar los valores de la matriz de confusión en cada celda
     thresh = matriz_confusion.max() / 2.
@@ -654,12 +693,48 @@ def GenerarMatrizConfuncion(matriz_confusion):
                  horizontalalignment="center",
                  color="white" if matriz_confusion[i, j] > thresh else "black")
 
-    plt.figtext(0.99, 0.01, date_string, ha='right', va='bottom')
-    ruta =GenerarDirectorio('Graficos')
+    # Calcular valores de interés
+    true_negative = matriz_confusion[0, 0]
+    false_positive = matriz_confusion[0, 1]
+    false_negative = matriz_confusion[1, 0]
+    true_positive = matriz_confusion[1, 1]
+
+    # Calcular la suma total de todas las predicciones
+    total_predicciones = np.sum(matriz_confusion)
+
+    # Calcular la suma total de las predicciones positivas y negativas
+    total_positivos = np.sum(matriz_confusion, axis=0)[1]
+    total_negativos = np.sum(matriz_confusion, axis=0)[0]
+
+    # Anotar los detalles de los valores de interés en el gráfico
+    plt.annotate(f'True Negatives: {true_negative} ({(true_negative/total_negativos)*100:.2f}%)', xy=(0, 0.1), xytext=(-1.5, 0.1),
+                 color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
+    plt.annotate(f'False Positives: {false_positive} ({(false_positive/total_negativos)*100:.2f}%)', xy=(1, 0.1), xytext=(2, 0.1),
+                 color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
+    plt.annotate(f'False Negatives: {false_negative} ({(false_negative/total_positivos)*100:.2f}%)', xy=(0, 1.1), xytext=(-1.5, 1.1),
+                 color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
+    plt.annotate(f'True Positives: {true_positive} ({(true_positive/total_positivos)*100:.2f}%)', xy=(1, 1.1), xytext=(2, 1.1),
+                 color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
+
+    # Obtener la fecha actual
+    import datetime
+    date_string = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+    # Generar un directorio para guardar los gráficos
+    import os
+ 
     # Ajustar los márgenes del gráfico
     plt.tight_layout()
 
-    plt.savefig(os.path.join(ruta, f'{date_string}_matrizConfusion.png'), dpi=1800,bbox_inches='tight')
+    # Guardar el gráfico en un archivo con mayor resolución (dpi)
+    plt.savefig(PATH_grafico_Matrix, dpi=1800, bbox_inches='tight')  # Aumenta el dpi según tus necesidades
+
+    # Mostrar el gráfico
+    plt.show()
+
+# # Ejemplo de uso con una matriz de confusión (por ejemplo)
+# matriz_confusion_ejemplo = np.array([[32, 249], [91, 2131]])
+# GenerarMatrizConfuncion(matriz_confusion_ejemplo)
 
 class MyDataset(Dataset):             # define una nueva clase MyDataset que hereda de Dataset
           def __init__(self, dataframe):    # define el constructor  "__init__"  que toma un solo argumento dataframe
@@ -710,7 +785,7 @@ def c_at_1(train_data, test_data, threshold=0.5):
           nu += 1
         elif (pred_score > 0.5) == (gt_score > 0.5):
           nc += 1.0
-    
+
       return (1 / n) * (nc + (nu * nc / n))
 def binarize(y, threshold=0.5, triple_valued=False):
     y = np.array(y)
@@ -744,7 +819,7 @@ def brier_score(train_data, test_data):
       try:
         return 1 - brier_score_loss(train_data, test_data)
       except ValueError:
-        return 0.0 
+        return 0.0
 def auc_score(train_data, test_data):
     try:
         return roc_auc_score(train_data, test_data)
@@ -790,7 +865,6 @@ def metricas_preds(preds, label):
 #                    Definición de early stop - Optuna
 #----------------------------------------------------------------------------------------------------
 
-OPTUNA_EARLY_STOPING = 4 # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 class EarlyStoppingExceeded(optuna.exceptions.OptunaError):
     early_stop = OPTUNA_EARLY_STOPING
@@ -817,7 +891,7 @@ def early_stopping_opt(study, trial):
     #print(f'EarlyStop counter: {EarlyStoppingExceeded.early_stop_count}, Best score: {study.best_value} and {EarlyStoppingExceeded.best_score}')
     return
 
- 
+
 def SaveJson(paths,model):
     # Abrir el archivo en modo escritura
     with open(paths, "w") as archivo:
@@ -864,11 +938,18 @@ class StackedCLSModel(nn.Module):
 
         return SequenceClassifierOutput(loss=loss, logits=logit)
       def predict(self, input_ids, attention_mask,labels=None):
+          input_ids =  input_ids.to(device)
+          attention_mask = attention_mask.to(device)
+          if(labels is not None):
+             labels = labels.to(device)
+
           logits = self.forward(input_ids, attention_mask, labels=None)
+          # logits = logits.logits
+          # logits = logits.cpu().detach().numpy() #lo convertimos en un tipo de dato numpy para poder manipularlo
           predicciones = logits.logits.argmax(dim=1)
           #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
           return predicciones.tolist()
- 
+
 if __name__ == "__main__":
-    main() 
-    
+    main()
+
