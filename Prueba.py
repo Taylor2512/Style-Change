@@ -170,15 +170,20 @@ def main():
     PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
     PATH_grafico_Matrix = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}Grafico-Matrix-confunsion.png")
     model=MODEL 
-   
+
+    # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
+        logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
         # SaveDataSet(args, carpeta)
         GenerarModelo(args, carpeta)
         print("Modelo generado")
+        logging.info("--------- MODELO GENERADO ---------")
 
+        logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
         GenerarSolucion(args, carpeta)
         print("solucion generada")
+        logging.info("--------- SOLUCION FINALIZADA ---------")
 
     else:
         RecorrerDataset(args)
@@ -211,6 +216,7 @@ def RecorrerDataset(args):
         GenerarSolucion(args, carpeta)
 
 def GenerarSolucion(argss, carpeta):
+    logging.info("----- FUNCION GENERAR SOL DEL MODELO -----")
     # device=None
     # device = torch.device('cuda')
 
@@ -239,6 +245,9 @@ def GenerarSolucion(argss, carpeta):
     modelo_cargado.load_state_dict(
     torch.load(PATH_modelo, map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
     df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
+
+    # logging.info("Modelo cargado: ", modelo_cargado)
+    logging.info("Datos Prueba: ", df)
     # Agrupar los datos por el valor de "id"
     # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
      # Agrupar los datos por el valor de "id"
@@ -248,6 +257,7 @@ def GenerarSolucion(argss, carpeta):
     # folder= argss.input
     predict_test = []
 
+    logging.info("DF Agrupados: ", grouped_df)
     # folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
     # if not os.path.exists(folderComplete):
     #     os.makedirs(folderComplete)
@@ -257,6 +267,8 @@ def GenerarSolucion(argss, carpeta):
         grouped_dataframe = pd.DataFrame(group_data)
         # Agregar el DataFrame agrupado a la lista
         dataframes_list.append(grouped_dataframe)
+
+    logging.info("Lista df agrupada: ", dataframes_list)
     for index in range(len(dataframes_list)):
         dataforinstans =dataframes_list[index]
         mydata = MyDataset(dataforinstans)
@@ -276,13 +288,15 @@ def GenerarSolucion(argss, carpeta):
             # Crear el DataFrame a partir de la lista de diccionarios
 
     predict_test = pd.DataFrame(predict_test)
+    logging.info("Resultado predicciones: ", predict_test)
     # Agrupar las listas en una sola lista por cada variable
     predict_grouped = {
         'predict': [item for sublist in predict_test['predict'] for item in sublist],
         'labels': [item for sublist in predict_test['labels'] for item in sublist]}
-
+    logging.info("Prediccion agrupada: ", predict_grouped)
 
     resultados_preds = metricas_preds(predict_grouped['predict'],predict_grouped['labels'])
+    logging.info("Métricas Predicciones: ", resultados_preds)
 
     with open(PATH_result_predict, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
@@ -302,9 +316,12 @@ def SaveDataSet(args, carpeta):
         SaveValidationOrTrain(folderComplete,args)
 
 def GenerarModelo(argss, carpeta):
+    logging.info("---- FUNCION GENERAR EL MODELO ----")
     print("Generar Modelo")
     dataTrainer=None
     dataEvaluation=None
+
+    # Lee el Dataset de entrenamiento y evaluación
     train= os.path.join(argss.input, carpeta)
     if argss.modelType=='mdeberta':
         dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
@@ -314,7 +331,13 @@ def GenerarModelo(argss, carpeta):
         dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','ebertaTokenizer.json'))
     dataTrainer=   dataTrainer.iloc[:5,:]
     dataEvaluation=   dataEvaluation.iloc[:5,:]
-    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)
+
+    # Dataset de entrenamiento y evaluación que se utilizará para el entrenamiento del modelo
+    train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
+    logging.info("----- DATASET -----")
+    logging.info("train_set: ", train_set)
+    logging.info("eval_dataset: ", eval_dataset)
+
     def objective(trial: optuna.Trial):
         lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
                      'func_activation': trial.suggest_categorical("func_activ", activation_options)}
@@ -352,6 +375,7 @@ def GenerarModelo(argss, carpeta):
     #study.optimize(func=objective, n_trials=NUM_TRIALS)
     # ejecucion con early stop
     try:
+        logging.info("Optuna con ejecucion con early stop: ")
         study.optimize(objective, callbacks=[early_stopping_opt])
     except EarlyStoppingExceeded:
         print(f'EarlyStopping Exceeded: No hay nuevos mejores puntajes en iteraciones {OPTUNA_EARLY_STOPING}')
@@ -378,8 +402,8 @@ def GenerarModelo(argss, carpeta):
     fig2 = grafico_optuna2.figure
     fig2.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
     fig2.savefig(PATH_grafico_optuna_param, dpi=400)  # Guardado de imagen
-
-
+   
+    logging.info("Gráficas guardadas")
     #----------------------------------------------------------------------------------------------------
     #                    Parametros encontrados con Optuna
     #----------------------------------------------------------------------------------------------------
@@ -389,7 +413,8 @@ def GenerarModelo(argss, carpeta):
     print(resultados_optuna.values)
 
     print('Encontrar los mejores parámetros del estudio')
-
+    logging.info("Resultados Optuna: ", resultados_optuna)
+    
     best_dropout = float(resultados_optuna.params['dropout'])
     best_func_act = resultados_optuna.params['func_activ']
     best_lr = float(resultados_optuna.params['learning_rate'])
@@ -413,7 +438,8 @@ def GenerarModelo(argss, carpeta):
         'best_epochs': best_epochs,
         'best_batch' : best_batch
     }
-
+    logging.info("Mejores hiperparámetros", best_hp_dict)
+    
     # Abrir el archivo en modo escritura
     with open(PATH_parametros, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
@@ -428,6 +454,7 @@ def GenerarModelo(argss, carpeta):
     #----------------------------------------------------------------------------------------------------
     #                    Entrenamiento con los mejores parametros
     #----------------------------------------------------------------------------------------------------
+    logging.info("----- ENTRENAMIENTO DEL MODELO -----")
     if data_dict is None:
         lstm_dict = None
         lstm_dict = {'dropout_rate': best_dropout,
@@ -439,6 +466,7 @@ def GenerarModelo(argss, carpeta):
     #model = None
     model = StackedCLSModel(lstm_dict,MODEL, MODEL_TYPE) #inicialización del modelo
     model.to(device)
+    #logging.info("Modelo a entrenar: ", model)
 
     # definir bien los arg
       # configuracion o argumentos de la forma en que se realizará el entrenamiento y evaluacion del modelo
@@ -466,10 +494,12 @@ def GenerarModelo(argss, carpeta):
     # Formatear el tiempo a horas, minutos y segundos
     formatted_time = format_time(training_time)
     print(f"Tiempo de entrenamiento: {formatted_time}")
+    logging.info(f"Tiempo de entrenamiento {formatted_time}")
 
 
     print("Training")
     evaluation_result = trainer.evaluate()
+    logging.info(f"Evaluación de entrenamiento: {formatted_time}")
 
     with open(PATH_result_train, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
