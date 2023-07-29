@@ -1,0 +1,6 @@
+You can certainly file a HIPAA complaint. I would also strongly consider reporting his behavior to his licensing board as well as his employer if he is not self-employed.
+To be clear, this is an assumption that he violated HIPAA rules. It is entirely possible that he found her address online through one of numerous online listing services. If he did that, it would not be a HIPAA violation, but his actions almost certainly are a professional code of conduct violation.
+But of course, there's no private cause of action for a HIPAA violation. OP's girlfriend can report it to HHS.
+A patient's mailing address is generally part of their billing record. So even though it's not relevant to any medical condition or treatment, it's among the records that are considered "private health information" and that a healthcare provider must keep confidential and secure.
+Even though the physician didn't "disclose" the PHI, they used it for their own purposes unrelated to patient healthcare, which is very probably a violation of the HIPAA privacy rule.
+Rule 25 of the Colorado State Board of Chiropractic Examiners addresses the professional ethics of the matter:

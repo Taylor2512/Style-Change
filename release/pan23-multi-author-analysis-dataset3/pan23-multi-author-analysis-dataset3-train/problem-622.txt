@@ -1,0 +1,5 @@
+Let's say for the sake of argument that this was an HIPAA violation, hypothetically. In that case, all you could do would be to file a complaint with HHS, and the most that might happen is that they might get a small fine. The big fines are reserved for "willful" violations. That money would not go to you, there's no lawsuit for you to file, HIPAA doesn't allow that. Again, this is all hypothetical.
+You can speak to an attorney but for however egregious this sounds, and it does sound egregious, there may not be a legal remedy (arbitration or not).
+It's unlikely that you have a viable claim under anything else, but you can speak to an attorney to go over the facts of the situation.
+How is your employer set up so that you'd go to HR about this rather than speaking to your insurer? Do they handle doctor appointments?
+Do you work in the medical field and is your employer also your doctor? Otherwise, it is likely that HIPAA does not apply here, it does not apply to employers specifically, only to covered entities (healthcare fields and associated fields as well like insurers, etc).

@@ -1,0 +1,18 @@
+Pretty sure this is talking about a laser target designator that would be used by ground troops to guide a laser guided bomb dropped from an airplane.
+What you’re talking about buying is basically a flashlight with a laser pointer attached to it, very different and I can’t imagine it would be regulated/restricted.
+Another user helped make a discovery upon investigation within Streamlight's website for their products.
+And here's the fact sheet for another unit that is more or less the same exact unit as the other but with a laser unit attached.
+I've combed through a couple of their other product's fact sheets and it seems to be only the units that have lasers are EAR restricted. ITAR seems to have nothing to do with it or else I think they would have mentioned it in the same document.
+TL;DR I guess only visible light units are able to be exported but not the laser capable or IR capable units. Hope someone can double check me on that.
+1) They're talking about missile guidance systems. They may use lasers, but they are not laser pointers. I'm not familiar with all the ITAR categories, but high power lasers may also be restricted. Again, not consumer grade laser pointers.
+Here's the thing. I have a friend over here that has ordered from Amazon (a long time ago, I forget how many years.) and they had shipped a very similar product to him overseas from the U.S.
+2) ITAR doesn't really apply so much to the person receiving the product as it does to the person/company exporting it. The exporter is expected to do their due diligence in researching their customers and making sure the export is legal, so if this was restricted they'd just tell you no and not sell to you.
+However for some reason, they don't ship overseas anymore for no discernible reason and I don't think ITAR is involved but I want to cover my bases.
+I can however order it to my house and have a family member ship it for me. But the way you describe it, the repercussions will fall upon the sender not the receiver and I don't want to subject my family member to that. So I would like to 110% check to see if they are in the clear without being screwed.
+This is the only example that details ITAR and I'm not sure if the information is accurate or if they are covering their bases.
+Even in that case, it's still the original seller subject to ITAR. They're supposed to check if the product is going to be re-exported and to who. That appears to be what the company at the link you posted is doing.
+If you have a family member order this for you, make sure they tell Streamlight what they are doing. I can't imagine that this will cause problems, it's going to be a fairly typical export situation for relatively low-level restricted products. It's not like you're talking about missile guidance computers.
+Most likely, they'll want some forms filled out, so that they can fulfill their reporting requirements.
+So maybe a regular visible light and laser is consumer grade and there's no need to worry about ITAR since ITAR has to do with military spec gear.
+Streamlight's website doesn't say anything about ITAR but there has been other cases where ITAR has been mentioned.
+ITAR compliance is the responsibility of the exporter, so if you are overseas and someone sends it to you, they're in trouble, not you. However if you buy it in the US and take it overseas (or sell/transfer it to a non-US person) then you are the exporter. Note that there is a separate list of EAR controlled items.

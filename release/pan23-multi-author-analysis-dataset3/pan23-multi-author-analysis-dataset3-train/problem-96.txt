@@ -1,0 +1,6 @@
+Hi there - lecturer in Latin literature, historian of 4-5th century AD, and have taught both Classical and early medieval history so have a fairly good background for this one. To take your questions one at a time:
+I understand that French and Spanish both developed from Vulgar Latin, but even though I don't speak either language, how is it that I can tell the languages apart, just by looking at the writing.
+From that example that you gave me, in Latin, Old French and French, I can see the French in the last one, but the middle one looks more similar to Latin.
+How close today's Romance languages are to Vulgar Latin, including the minor languages such as Catalan and Sardinian:
+Most modern romance languages, are analytic languages (like English), where meaning is mostly conveyed by word order and prepositions. So when saying "The poet gives a rose to the girl", "The girl gives a rose to the poet", and "The rose gives a poet to the girl"; changing word order completely changes the meaning of the sentence.
+So, "The poet gives a rose to the girl" could be, in Latin, "Poeta rosam puellae dat"; or "Puellae rosam poeta dat"; or even "Rosam poeta puellae dat"; where changing word order doesn't, in any sense, change meaning, since it's conveyed by "word form", the "cases", morphology.

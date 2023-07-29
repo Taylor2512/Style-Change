@@ -1,0 +1,5 @@
+Ladies, stop using apps like this! Use a regular old-fashioned calendar if you have to. These lunatics are gonna get their hands on this info and use it against you. Stop using these damn apps.
+Honestly, you shouldn’t use those apps at all. They’re not covered by HIPAA and I can’t think of one app company that I would actually trust with any private health data that might get me prosecuted.
+When will we accept that what we put into our phones via apps is no longer "private"; aside from information protected by HIPPA Laws through our health care providers.
+It's about period tracking apps on phones, which are not protected by HIPAA. If the phone is seized under warrant (and unlocked), all apps/files can be searched. The proposal created a specific exclusion for menstrual data.
+Practically speaking, it's not any different than if you had a notebook seized under warrant where you did period tracking by pen. HIPAA doesn't apply because it's not protected records from a healthcare provider, just personal stuff that the owner decided to record.

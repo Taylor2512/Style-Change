@@ -1,0 +1,7 @@
+Utah law breaks down intestacy to essentially 50% of the estate goes to the spouse, 50% goes to the children from a prior marriage. (Less a spousal allowance off the top).
+(2)	For purposes of Subsection (1)(b), if the intestate estate passes to both the decedent's surviving spouse and to other heirs, then any nonprobate transfer, as defined in Section 75-2-206, received by the surviving spouse is added to the probate estate in calculating the intestate heirs' shares and is conclusively treated as an advancement under Section 75-2-109 in determining the spouse's share.
+The value of any "nonprobate transfers" is included in the intestate estate, when determining what the spouse and the heirs are each entitled to under intestate succession.
+It also says any nonprobate transfer received by an heir is added to the probate estate in calculating the intestate heirs' shares and is conclusively treated as an advancement to the heir in determining the heir's share.
+Under the same section you cited, the personal representative accounted for that as a transfer to the wife automatically at death, but charged it against her eventual 50% distribution at the close of probate as a nonprobate transfer.
+That section generally says that provisions for payment or transfer upon death that are included in documentation related to a pension plan will control. They are nonprobate assets not generally included in the estate.
+In general assets that pass to a defined beneficiary do so outside probate. The pension can likely work as written.

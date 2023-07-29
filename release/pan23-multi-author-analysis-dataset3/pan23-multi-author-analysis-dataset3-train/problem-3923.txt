@@ -1,0 +1,7 @@
+> This took place in 1795. Jean Valjean was taken before the tribunals of the time for theft and breaking and entering an inhabited house at night.
+Are you arguing that the code was substantially unchanged, or that Hugo used the code of 1810 as a reference, without going to the effort of retracing the actual legislation existent in 1795?
+Good question, I should have clarified that:Victor Hugo used the French Penal Code of 1810 (which was continually updated & expanded until its replacement in 1994) without basing Valjeans conviction on the previous penal code which had been put forward in 1791.
+Jean Valjean was sentenced according to the French Penal Code of 1810 (you can find an English translation ) which is often confused with the much more famous Code Napoleon; a law code which did not deal with criminal offenses.
+So by committing his crime in the first place and doing so by night (or rather in the evening, but it being considered night by the judge), Jean Valjean had already made sure he would be sentenced to hard labour.
+So it would seem, somewhat ironically perhaps, that the judge was lenient in his sentencing of Jean Valjean to hard labour for a fixed period rather than perpetuity.
+So the original punishment of five years that Hugo gives Valjean actually seems a lot milder than what would have been the actual law at the time. He would probably have been given 14 years of hard labour instead of 5, if all of the aggravating circumstances in the narration were accepted by the jurors.

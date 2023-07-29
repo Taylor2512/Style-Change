@@ -1,0 +1,7 @@
+Look at it this way, you purchased the game disc/downloaded code and own it. You do not own the server the game is played on. You signed an agreement that includes the terms of service for using that server. They would be suspending your access to the server, you still own the game disc/download, and can still have it installed on your computer, you just can't play on their server.
+For some games this renders your game unusable, but it doesn't steal the game. If the game has an offline component, you could continue to play it. If the game allows you to create your own server, you can still play it.
+Do you own the physical server the game is played on? Are you performing the server maintenance, or the game updates?
+But more generally, online games require a continued connection to the game servers, which require ongoing maintenance and support. If you violate the license agreement, they aren’t depriving you of property; they’re cutting off new communication from their server to yours.
+You don’t sign an EULA when purchasing a car. You sign a purchase agreement for the physical title to the property.
+Cars do not have a license agreement, and they cannot repossess the physical engine because they no longer have title to the property.
+Oh so if I buy a car and "violate the licencing agreement" they can just take my engine out of my car so it doesn't work anymore and then bar me from ever installing a new one right?

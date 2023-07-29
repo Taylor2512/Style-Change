@@ -1,0 +1,6 @@
+You mention salary so I take it you are a salaried employee rather than hourly?? If you are salaried exempt then you aren’t owed OT, your pay is the same whether you work 10hrs a week or 80hrs a week.
+That would be $650/week for a 40-hour week, which is just below the salary threshold. The hourly threshold for the computer exemption is $27.63, which you are far below. It sounds like you do not qualify for any FLSA exemption, and are therefore entitled to overtime pay for any hours over 40 that you work in one week.
+You can file a for your unpaid overtime hours with the New Jersey Department of Labor and Workforce Development.
+The U.S. Department of Labor's explains more details, and New Jersey follows federal law regarding overtime exemptions.
+Many computer programmers, software engineers and similarly skilled workers in the computer field who are paid at least $684 per week are exempt from overtime pay.
+Even if you're paid by the hour as opposed to a yearly salary, software developers/engineers can sometimes be exempt from overtime, provided they meet certain criteria.

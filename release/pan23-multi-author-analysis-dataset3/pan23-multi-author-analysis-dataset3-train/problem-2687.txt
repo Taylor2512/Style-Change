@@ -1,0 +1,6 @@
+PayPal will automatically close your case because you have already opened a case with eBay. Their terms of service say that you cannit open a PayPal Buyer Protection claim if you've already opened an eBay Money Back Guarantee case or a case with the financial institution.
+eBay and PayPal are very much intertwined. The PayPal User Agreement states that they will use eBay's decision on Money Back Guarantee claims on whether or not to remove money from your account.
+Now on the opposite, if you open a merchant dispute with paypal, that will cancel any active ebay cases.
+A paypal claim initiated from a paypal merchant dispute has nothing to do with any previous ebay money back claims. It is a separate dispute.
+Paypal is a merchant processor. Ebay is the store. Paypal gives all customers the ability to dispute and open a claim for any transaction with no influence from an ebay decision.
+That is regards to an ebay claim and an ebay money hold. Your authorize paypal to hold and remove funds based on a ebay claim. You did not read the agreement or are not a seller on ebay. They have been separate organizations for year. As of 2021 ebays contract with paypal has ended and switching to managed payments.

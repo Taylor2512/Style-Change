@@ -1,0 +1,10 @@
+Just like if he came to you and said "you're fired" and you said "not so fast, here's my list of demands before you fire me" he would laugh you out of the room.
+If you happen to leave before completing the documentation, oh well. If he really wants to, he can always pay you a consulting fee (that you deem worthwhile, consider 3-4x your base pay) to finish your documentation. I'd verify your non-compete allows you to operate as a consultant for the company before approaching the topic.
+Until the date you effectively resign from the company, you should work on developing the training materials he requested as part of your off-boarding.
+Edit: Realized after posting this is largely the same advice cypher_blue and bucket46 provided, but I'll leave it up anyway.
+You don't even have to stick around for the duration of your notice. You can walk out right now as long as it doesn't violate any restriction on the contracts your signed. If you are sued winning is simply a matter of showing up for court.
+The other advice is all correct, but just because he doesn't have a winning case doesn't mean you can't be taken to court. Keeping good records here would be responsible.
+I don't know your duties, so it's hard to give tailored advice. If, say, you were a network administrator, and you changed all the passwords and locked people out of systems nefariously, that would be actionable. On the other hand, other people not being trained to use those systems is not your responsibility.
+To have a chance at a successful lawsuit, the employer would need to at minimum be able to 1. Show damages, and 2. Show malicious action that led to those damages.
+You don't have to adhere to your bosses demands. In your shoes, if I knew my leaving would lock people out of tasks and processes, I would be proactively making sure I could demonstrate this was because of their incompetence, not my malice, just to make any legal issues as pain-free as possible.
+Let's say there's an important deadline next week, and you quit tonight, but before leaving, you change all passwords so no one can complete the work and an important client is lost. That satisfies those elements.

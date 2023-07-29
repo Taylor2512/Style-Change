@@ -1,0 +1,7 @@
+Illinois is a two party consent state, which means that both parties to a conversation have to consent to an audio recording or it is an illegal recording.
+Illinois is a 2 party consent state so it is illegal that they are recording your conversations without your knowledge.
+Recording conversations in Illinois is not illegal where there is no reasonable expectation of privacy.
+While I can't find anything on Illinois case law, the eavesdropping statute doesn't make an exception for implied consent. So long as at least one party to the conversation believes it was private and had a reasonable expectation of privacy, the conversation is covered by the law.
+This is in contrast to one party consent states, where one party can record a conversation without the other person’s knowledge (for example, in NY).
+In neither a one party or two party consent state may a conversation be recorded where neither party has consented.
+HOWEVER - and this is a big however - as long as you are made aware of the recording, then there is implied consent. Your coworker was made aware and therefore consented. You also seemed to have some awareness of the cameras. Are there any signs up about the possibility of recording? Does your employee manual say anything about recording? Are the cameras conspicuous? “Consent” can be very easy to establish under any of these or similar circumstances.

@@ -1,0 +1,16 @@
+You're in breach of your contract if you store your client's data elsewhere. Whether that breach is material or not, and what consequences you would be exposed to, depend heavily on the nature of the data and what actually comes of your decision to ignore the agreement you negotiated.
+You do not have a specific legal right to ignore these terms, although a breach of contract that's not material generally won't lead to worse consequences than losing your client.
+The right way to handle this would have been to redline it during the contract negotiation. When the contract's up for renewal, maybe you can do that then. Expect that you'll probably have to indemnify your client against losses due to any leaks from your storage, if they agree to this at all.
+So, um, it does imply I just "do it on the side" to cover my own ass and hope they don't notice though. Sigh. I didn't agree to these terms in the sense that I only got to see the details once I was onboard... sigh.
+I've been dancing around this issue, but I want to address it: are you sure you're correctly categorized? Normally, a contractor works to a statement of work and has fairly broad discretion in how they meet those goals. They're running their own business, even if they work closely with their client. The amount of control it sounds like your client is exerting makes me wonder if you aren't, in fact, an employee.
+If they aren't part of the contract you signed, then they may not be enforceable in court, although if your contract allows it your client may be able to terminate the relationship over policies like this.
+The joke here is that the contractors are defacto employees, and the company uses the contracting system to effectively "try out" potential employees for several years while having the power to get rid of them with no notice.
+You seem to be using "work" and "records" interchangeably, and keep talking about "liability" and "defend yourself".
+I'm doing very well here work wise, but I don't assume I'll get on. So, given I carry my own liability I'd rather not be locked out of my own records.
+What sort of data are you considering making copies of, anyway? Is it work that you're doing for the company, or communication with them?
+What I do during the day, when I did it, and what my reasoning was. My links to informational systems and partial clips of what was there so I can keep track of my actions. Engineering notebook. Add in snippets of code. Make sense?
+Basically "You agree to have no record of your work for us as a stipulation of doing work for us"... that makes little to no sense when I boil it down.
+That makes complete sense, and I 100% understand why you want to secure a copy of that information for your own protection.
+Unfortunately, you're still right smack in the issue that u/derspiny has identified. And I don't think I can think of any better options.
+2. My work sets the schedule. It's like an other engineering job though in the sense that it's like "just try and get your shit done" so if you screw off a little but get your things done they don't care.
+Or are you considered a "temporary employee" because you are paid by a different company but report directly to your "client" or "host employer".

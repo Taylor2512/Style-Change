@@ -1,0 +1,5 @@
+I am a bot whose sole purpose is to improve the timeliness and accuracy of responses in this subreddit.
+It appears you forgot to include your location in the title or body of your post. Please update the body of your original post to include this information.
+Title: I was gifted cryptocurrency years ago and looking to sell. What are my tax obligations? (US).
+Let’s say a year ago you were gifted $30k of BTC. That gift would be a taxable gift to the gifter because it’s over the annual gift exclusion. They could claim the excess amount as part of their lifetime gift tax exclusion.
+However, the gift tax consequences are separate from the income tax consequences. In this case, your capital gains aren’t based on the FMV at the time you acquired it. (Assuming the value went up) Your basis is the original acquisition basis of the person who gifted you the stock. The gifter didn’t pay the capital gains tax when gifting it like they would normally if they sold it, so it makes sense that you’re responsible for the taxes for that rise in value.

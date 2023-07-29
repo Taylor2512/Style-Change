@@ -1,0 +1,7 @@
+To begin with it's worth noting that there are pretty big differences within the writing of Chinese varieties - differences in syntax, and using words with different origins would result in a difference in the written forms between two varieties.
+But the Chinese writing system obscures pronunciation - two varieties may pronounce the word for a concept differently, but if the two words have the same etymological origin, they will use the same character. (c.f. Mandarin ni and Cantonese nei - both written 你).
+This is the same with Chinese dialects. A Cantonese person would not be able to verbally communicate with a person who speaks Hakka. However, both dialects use the same writing standard (vocabulary and grammar) in Chinese.
+I think the reason why you may find my question confusing is because you may not be familiar with Chinese dialects.
+I'm interpreting your question as "why do European language look more distinct than Chinese languages when written down".
+Are you asking why Europeans never implemented a single alphabet to underpin all of their languages?
+Or are you asking why Europeans sharing the Latin alphabet diverged to include unique characters (e.g. the Spanish ñ, the Scandinavian ø, the German ß)?

@@ -1,0 +1,8 @@
+This is regarding Starlink terminals bought from “a UK company” and the funding issue is between the UK military who is supporting these terminals, and the Ukraine military, who had concerns about the terminals potentially being shut off or without support if nobody pays for them.
+The Ukraine military has requested from their UK counterpart to continue to fund them, although the article doesn’t give a clear indication of how the situation looks today.
+As usual, the headline makes it sound as if SpaceX just randomly turned them off or something, and the article obfuscates the important information between lots of other stuff.
+Apparently there are thousands of Starlink terminals in use, and most them are active without anybody paying for them.
+These terminals are quite expensive and risky to operate, because they are not normal consumer versions, and not used for normal consumer tasks. The article also says so.
+I feel like 50% of Reddit posts I see now are out to bash Musk. It makes me wonder what the agenda is on this platform and more importantly, who funds all this misinformation.
+The article is trying to make you think SpaceX is responsible for these terminals shutting off, when that is not the case at all (and the article doesn’t claim so, but the core information is deliberately made difficult to understand).
+They probably need to be shielded from attacks, and also made impossible for Russians to use (by stealing them, using them to target troops, etc), and need to operate in difficult conditions.

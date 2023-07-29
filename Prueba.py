@@ -3,6 +3,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
 import os
 import numpy as np
+from sqlalchemy import String
 import torch
 import torch.nn as nn
 from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
@@ -10,13 +11,10 @@ import os
 from glob import glob
 import argparse
 import json
-import warnings
-from enum import Enum
 import pandas as pd
 import ast
 from typing import List
 from TextoConParrafos import TextoConParrafos
-from TextDataset import TextDataset
 import pandas as pd
 import numpy as np
 import datetime
@@ -27,9 +25,6 @@ import re
 import re,os
 import unicodedata
 import matplotlib.pyplot as plt
-import itertools
-import sklearn.metrics as metrics
-from sklearn import metrics, feature_selection
 from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
 from transformers import Trainer, TrainingArguments, EvalPrediction,DataCollatorWithPadding, Trainer, TrainingArguments, AutoModelForSequenceClassification
@@ -63,9 +58,37 @@ import numpy as np
 from transformers.modeling_outputs import SequenceClassifierOutput
 from bs4 import BeautifulSoup
 from TextoConParrafos import TextoConParrafos
+import logging
+
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
 MODEL_TYPE = None
+logging.basicConfig(filename='registro.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logs = []
+#----------------------------------------------------------------------------------------------------
+#                    Entrenamiento Optuna y objetivo
+#----------------------------------------------------------------------------------------------------
+
+###### Definición de Hiperparámetros ######
+#funcion de activación
+activation_options = ["tanh","relu", "gelu"]
+
+#Dropout
+dropout_min = 0.2
+dropout_max = 0.5
+
+#Learning rate
+lr_rate_min = 3e-5
+lr_rate_max = 5e-5
+
+#epochs
+MIN_EPOCHS = 1
+MAX_EPOCHS = 5
+
+#Batchs
+BATCHS_options = [16]
+
 
 def main():
     
@@ -83,11 +106,14 @@ def main():
         config = AutoConfig.from_pretrained("microsoft/mdeberta-v3-base",output_hidden_states=True, output_attentions=True)
         MODEL = AutoModel.from_pretrained("microsoft/mdeberta-v3-base", config=config)
         MODEL_TYPE=args.modelType
+        logging.info("Modelo usado",args.modelType)
     elif args.modelType=='deberta':
         tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
         config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
+        logging.info("Modelo usado",args.modelType)
+
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         SaveDataSet(args, carpeta)
@@ -211,6 +237,21 @@ def GenerarDirectorio(name):
     if not os.path.exists(directorio):
         os.makedirs(directorio)
     return directorio
+
+
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
+# Guardar los mejores parametros en un archivo
+PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
+# Guardar graficas y resultados
+PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
+PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
+PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
+PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
+PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
+PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
 def remove_html_tags(text):
     soup = BeautifulSoup(text, "html.parser")
     stripped_text = soup.get_text()
@@ -248,6 +289,7 @@ def get_problem_ids(input_folder: str) -> list:
     for file in glob(os.path.join(input_folder, "*.txt")):
         problem_ids.append(os.path.basename(file)[8:-4])
     print(f"Read {len(problem_ids)} problem ids from {input_folder}.")
+    logging.info(f"Read {len(problem_ids)} problem ids from {input_folder}.")
     return sorted(problem_ids)
 def GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConParrafos:
     file_pathJson = os.path.join(
@@ -270,6 +312,7 @@ def GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConPar
             return None
 def SaveValidationOrTrain(folder,args):
     problem_ids = get_problem_ids(folder)
+
     Lista: List[TextoConParrafos] = []
     for problem_id in problem_ids:
         textos = TextoConParrafos()
@@ -439,40 +482,56 @@ class MyDataset(Dataset):             # define una nueva clase MyDataset que her
 
           def __len__(self):
               return self.len   # devuelve la longitud del conjunto de datos personalizado
+
 class StackedCLSModel(nn.Module):
-          def __init__(self, model=MODEL, model_type=MODEL_TYPE):
-              super(StackedCLSModel, self).__init__()
-              self.model = MODEL
-              self.model_type = MODEL_TYPE
-              self.Fusion = nn.Parameter(torch.zeros(12, 1))
-              self.dropout = nn.Dropout(0.2)
-              self.funActivacion = nn.ReLU()
-              self.lin1 = nn.Linear(768, 128)
-              self.lin2 = nn.Linear(128, 2)
-              self.loss_func = nn.CrossEntropyLoss()
-              self.init = 0
-          def forward(self, input_ids, attention_mask, labels=None):
-            outputs = self.model(input_ids, attention_mask=attention_mask)
-            if self.model_type == "mdeberta":
-              cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
-            elif self.model_type == "deberta":
-              cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
-            t_cls_tensors = cls_tensors.transpose(1, 0)
-            t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
-            x = self.lin1(t_cls_tensors_mean)
-            x = self.dropout(x)
-            x = self.funActivacion(x)
-            logit = self.lin2(x)
-            loss = None
-            if labels is not None:
-              loss = self.loss_func(logit, labels.float())
-            return SequenceClassifierOutput(loss=loss, logits=logit)
-        
-          def predict(self, input_ids, attention_mask,labels=None):
-              logits = self.forward(input_ids, attention_mask, labels=None)
-              predicciones = logits.logits.argmax(dim=1)
-            #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
-              return predicciones.tolist()        
+      def __init__(self,lstm_dict, model=MODEL, model_type=MODEL_TYPE):
+        super(StackedCLSModel, self).__init__()
+                            # método __init__ nos aseguramos de que el módulo de red neuronal herede las propiedades y métodos de la clase nn.Module
+        self.model = MODEL # almacene la ruta al modelo pre-entrenado el tipo de modelo
+        self.model_type = MODEL_TYPE # almacene la ruta al tipo de modelo
+        self.Fusion = nn.Parameter(torch.zeros(12,1)) # se utiliza para crear un tensor de tamaño (12, 1) lleno de ceros y convertirlo en un parámetro de la red neuronal para que pueda ser optimizado durante el entrenamiento.
+        self.dropout =  nn.Dropout(lstm_dict['dropout_rate']) # crea una capa de abandono con una probabilidad de abandono de 0,3
+
+        #escoger la función de activación mas apropiada.
+        if lstm_dict['func_activation'] == "tanh":
+          self.funActivacion = nn.Tanh()
+        elif lstm_dict['func_activation'] == "relu":
+          self.funActivacion = nn.ReLU()
+        elif lstm_dict['func_activation'] == "gelu":
+          self.funActivacion = nn.GELU()
+
+        self.lin1 = nn.Linear(768, 384)#crea una capa lineal en PyTorch que se utiliza en una red neuronal
+                                       #para realizar una transformación lineal de las características de entrada de tamaño 768 a características de salida de tamaño 128
+                                       #que se utiliza en un modelo BERT para procesar la entrada de texto.
+        self.lin2 = nn.Linear(384, 2)
+        self.loss_func = nn.CrossEntropyLoss() # establece la función de pérdida que se utilizará durante el entrenamiento
+      def forward(self, input_ids, attention_mask, labels=None):
+        outputs = self.model(input_ids, attention_mask=attention_mask)
+        if self.model_type == "mdeberta":
+          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+        elif self.model_type == "deberta":
+          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+        t_cls_tensors = cls_tensors.transpose(1, 0)
+        t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
+        x = self.lin1(t_cls_tensors_mean)
+        x = self.dropout(x)
+        x = self.funActivacion(x)
+        logit = self.lin2(x)
+        loss = None
+        if labels is not None:
+          loss = self.loss_func(logit, labels.float())
+
+        return SequenceClassifierOutput(loss=loss, logits=logit)
+      def predict(self, input_ids, attention_mask,labels=None):
+          logits = self.forward(input_ids, attention_mask, labels=None)
+          predicciones = logits.logits.argmax(dim=1)
+          #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
+          return predicciones.tolist()
+
+class MyTrainer(Trainer):
+      def _init_(self, **kwargs):
+            super()._init_(**kwargs)
+
 def normalizar_propiedades(lista):
     for diccionario in lista:
         for propiedad in list(diccionario.keys()):
@@ -548,6 +607,179 @@ def compute_metrics(p: EvalPrediction): # calcula diversas métricas de evaluaci
           'precision micro': precision,
           'precision macro': precision_macro
           } 
+
+# Metricas realizadas durante la predicción
+def metricas_preds(preds, label):
+  return {
+          'F1-macro-RC': f1_score(label, preds, average='macro'),
+          'F1-bynary-RC': f1_score(label, preds, average='binary'),
+          'Accuracy-RC': accuracy_score(label, preds),
+          'Precision_Score_Macro_RC': precision_score(label, preds, average='macro'),
+          'Precision_Score_Micro_RC': precision_score(label, preds, average='micro'),
+          'Precision_Score_Weighted_RC': precision_score(label, preds, average='weighted')
+
+          }
+def objective(trial: optuna.Trial):
+    
+    lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
+                 'func_activation': trial.suggest_categorical("func_activ", activation_options)}
+
+    model = StackedCLSModel(lstm_dict,MODEL,MODEL_TYPE) #inicialización del modelo
+    model.to(device)
+
+    training_args = TrainingArguments(
+        output_dir='output', #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
+        evaluation_strategy='epoch', #la evaluación se realiza después de cada época
+        learning_rate=trial.suggest_loguniform('learning_rate', low=lr_rate_min, high=lr_rate_max),
+        # num_train_epochs=3,
+        num_train_epochs=trial.suggest_int('num_epochs', low = MIN_EPOCHS,high = MAX_EPOCHS),
+        remove_unused_columns=False, #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
+        per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options),
+        per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options))
+
+    trainer = Trainer(
+        model=model,
+        compute_metrics=compute_metrics,
+        args=training_args,
+        train_dataset=train_set,
+        eval_dataset=eval_dataset)
+
+    trainer.train()
+
+
+    #Se define cual sera el objetivo a minimizar o maximizar
+    evaluation_result = trainer.evaluate()
+    #validation_loss = evaluation_result['eval_loss']
+    #train_loss = result.training_loss
+    accuracy = evaluation_result['eval_Accuracy-RC']
+    f1_macro = evaluation_result['eval_F1-macro-RC']
+
+    #return validation_loss, train_loss , accuracy
+    return f1_macro , accuracy
+
+
+#----------------------------------------------------------------------------------------------------
+#                    Definición de early stop - Optuna
+#----------------------------------------------------------------------------------------------------
+
+OPTUNA_EARLY_STOPING = 4 # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
+
+class EarlyStoppingExceeded(optuna.exceptions.OptunaError):
+    early_stop = OPTUNA_EARLY_STOPING
+    early_stop_count = 0
+    best_score = None
+
+def early_stopping_opt(study, trial):
+    resultados_optuna = max(study.best_trials, key=lambda t: t.values[0]) #el mejor valor comparando que posicion 0 o 1
+    best_f1 = resultados_optuna.values[0]
+
+    if EarlyStoppingExceeded.best_score == None: # cuando recien empieza le asigna el mejor valor
+      EarlyStoppingExceeded.best_score = best_f1
+
+    if best_f1 > EarlyStoppingExceeded.best_score: # se define si es mayor que (maximizar) o menor que (minimizar)
+        EarlyStoppingExceeded.best_score = best_f1
+        EarlyStoppingExceeded.early_stop_count = 0
+    else:
+      if EarlyStoppingExceeded.early_stop_count > EarlyStoppingExceeded.early_stop: # si aun no cumple el contador pasa al else
+            EarlyStoppingExceeded.early_stop_count = 0
+            best_score = None
+            raise EarlyStoppingExceeded()
+      else:
+            EarlyStoppingExceeded.early_stop_count=EarlyStoppingExceeded.early_stop_count+1 # se suma 1 para continuar con el early stop
+    #print(f'EarlyStop counter: {EarlyStoppingExceeded.early_stop_count}, Best score: {study.best_value} and {EarlyStoppingExceeded.best_score}')
+    return
+
+
+#----------------------------------------------------------------------------------------------------
+#                    Creación del estudio Optuna
+#----------------------------------------------------------------------------------------------------
+
+print('Activación del estudio de Optuna')
+study = optuna.create_study(directions=["maximize", "maximize"]) # multiples objetivos
+
+#para ejecución sin early stop
+#study.optimize(func=objective, n_trials=NUM_TRIALS)
+
+# ejecucion con early stop
+try:
+    study.optimize(objective, callbacks=[early_stopping_opt])
+except EarlyStoppingExceeded:
+    print(f'EarlyStopping Exceeded: No hay nuevos mejores puntajes en iteraciones {OPTUNA_EARLY_STOPING}')
+
+#### Guardar historial ###
+trials_df = study.trials_dataframe()
+trials_df.to_csv(PATH_historial_optuna, index=False)
+
+
+
+
+#----------------------------------------------------------------------------------------------------
+#                    Gráficas
+#----------------------------------------------------------------------------------------------------
+
+### Grafico 1 ###
+grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["f1", "accuracy"])
+# Ajustar el tamaño de la figura
+fig1 = grafico_optuna1.figure
+fig1.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
+fig1.savefig(PATH_grafico_optuna, dpi=400)  # Guardado de imagen
+
+
+### Grafico 2 ###
+grafico_optuna2 = optuna.visualization.matplotlib.plot_optimization_history(study, target=lambda t: t.values[0])
+# Ajustar el tamaño de la figura
+fig2 = grafico_optuna2.figure
+fig2.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
+fig2.savefig(PATH_grafico_optuna_param, dpi=400)  # Guardado de imagen
+
+
+
+
+
+
+#----------------------------------------------------------------------------------------------------
+#                    Parametros encontrados con Optuna
+#----------------------------------------------------------------------------------------------------
+
+print(study.best_trials)
+resultados_optuna = max(study.best_trials, key=lambda t: t.values[1])
+print(resultados_optuna.values)
+
+print('Encontrar los mejores parámetros del estudio')
+
+best_dropout = float(resultados_optuna.params['dropout'])
+best_func_act = resultados_optuna.params['func_activ']
+best_lr = float(resultados_optuna.params['learning_rate'])
+best_epochs = float(resultados_optuna.params['num_epochs'])
+best_batch = resultados_optuna.params['batch_opt']
+
+print('Extraer los mejores parámetros de estudio')
+
+print(f'El mejor dropout es: {best_dropout}')
+print(f'La mejor funcion de activación es: {best_func_act}')
+print(f'El mejor learning rate is: {best_lr}')
+print(f'El mejor epochs is: {best_epochs}')
+print(f'El mejor batch is: {best_batch}')
+
+
+print('Crear diccionario de los mejores hiperparámetros')
+best_hp_dict = {
+    'dropout_rate' : best_dropout,
+    'func_activation' : best_func_act,
+    'best_learning_rate' : best_lr,
+    'best_epochs': best_epochs,
+    'best_batch' : best_batch
+}
+
+
+
+
+def SaveJson(paths,model):
+    # Abrir el archivo en modo escritura
+    with open(paths, "w") as archivo:
+        # Guardar el diccionario como JSON en el archivo
+        json.dump(model, archivo)
+    
 if __name__ == "__main__":
     main() 
     

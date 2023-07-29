@@ -1,0 +1,6 @@
+Without any further action, no. However social engineering is a powerful tool, and people are often fooled by phishing links via email which can lead to a person revealing all kinds of personal details.
+There are many possible ways to tie your identity to an email address, so you should always be careful.
+For another example, let's say you signed up with some no-name small-time email provider. Someone is out to get you, and they slip the owner of that email provider $100 to "accidentally" disclose your personal information. This isn't common, but it does happen.
+From a legal standpoint, if your question is about doxxing, then absent any local law barring the disclosure of your email address, it's not illegal. If your question is "can the police find me based on someone sharing my email address", then the answer is "yes, depending".
+This can change if you're the police and have a warrant requiring the ISP to look into the IP address or the email provider to provide other information. But for Joe off the street? Generally useless.
+Generally no. Just think, when you sign up for an email do you have to provide your home address? IP is largely useless as well as they can frequently change.

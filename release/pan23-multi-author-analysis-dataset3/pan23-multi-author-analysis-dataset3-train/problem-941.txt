@@ -1,0 +1,6 @@
+I don’t think they could even figure out that it’s an error from their side. Venmo does SO MANY weird transactions all the time, between repeat people and new people, they absolutely are more likely to only deal with issues once reported. You are not scamming anyone… and at least on Venmo, there’s a feature that makes someone either enter the last four digits of the person they want to send to’s phone number or proceed without confirming their identity.
+As mentioned in the above link: When you pay someone on Venmo, that person does not have access to the payment method you used (for example: your bank account information or your debit card number). In other words, when you pay them back, you won’t be sharing any new information with them, aside from whatever you write in the payment note.
+No, if you just reverse the transaction that they initiated, then they don't have any new information.
+Yeah, if you send them the money back on Venmo, then you've effectively reversed the transaction and have given them no new information than they already had.
+If Venmo reached out to me at the senders' request, I would accept a chargeback, but I would not proactively send the money back in the first place to avoid them double-dipping.
+According to Venmo's , you should send the money back with a note that they paid the wrong person and block them.

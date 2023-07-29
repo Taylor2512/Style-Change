@@ -1,0 +1,7 @@
+No, this does not violate HIPAA. HIPPA deal with medical professionals keeping your records private.
+Since you testified about your records, the defense has a right to view them through discovery, unless the judge deems that they weren’t relevant to the case.
+As far as the records being viewable, the attorney didn’t do anything illegal. They obtained evidence and submitted it, per rules of discovery. The question is if the court itself didn’t protect your privacy.
+If something like this happens in Utah, you can ask the Court to reclassify the document as confidential. You might want to call the court clerk and see if anything can be done.
+You're absolutely right about HIPAA. Does not apply to an attorney. But there is usually a procedure by which attorneys can, and should, submit documents like these as confidential. That way it is accessible to everyone in the case but not the public at large.
+The Court has the right to designate documents as confidential. But they don't have the ability to monitor all the documents filed and determine whether something includes private health information. That is why attorneys also have an obligation to keep private information private.
+Why would a court sua sponte declare something confidential? The default rule is that court proceedings are public absent a good reason otherwise. If you want a confidentiality order, file a joint motion. If you can’t get an agreement file motions for protective order and seal your future filings.

@@ -1,0 +1,5 @@
+It says "during OR within". Within the scope of employment would be fine (because that excludes things outside the scope), but During the scope of employment is NOT fine. "During the scope of employment" means at any time while you are employed, or at least it could be interpreted that way.
+It says "during or within the scope of your employment." This is extremely common in creative, development, and engineering employment contracts - I've always had a clause like this in my contracts (usually includes patents as well). Basically, any work you do for the company is owned by them. Doesn't matter if you do it from home, on or off the clock, or wherever - if it is within the scope of your employment or at their direction, they own it (assuming you are salaried).
+1. Anything built specifically for the company or at the direction of the company - on company time or off company time.
+1. During the scope of your employment: this would be the business hours and days defined in the scope of employment section of tyr contact.
+Because the language is "during or within the scope of employment". That could be broken down as 2 things:

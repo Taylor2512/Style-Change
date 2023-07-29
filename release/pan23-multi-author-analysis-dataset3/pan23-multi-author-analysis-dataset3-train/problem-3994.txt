@@ -1,0 +1,8 @@
+From the perspective of a reasonably educated layman and IT professional, there are some potential issues. But first, let me recap what I understand from your post and comments:
+You sent some suggestive photos a year ago. These were sent using your personal phone, and from your personal Gmail account to a recipient’s Gmail account. A year later, you logged into your personal Gmail account — the same one which sent the suggestive photos — using school equipment to retrieve a Github confirmation code.
+Recently, OP logged in to their personal email address - the one that they sent the pics from a year ago - on their school issued computer to obtain a verification code for Gothub. It’s unclear why, when or how, but at some point the school administration accessed OPs personal email through their school issued computer either because it was not logged out of, or because they used a function of the computer that saved the log in details.
+- If you didn’t explicitly log out of your account, it’s possible that the school still doesn’t have your password; they may simply have accessed the same computer you used and taken advantage of the existing session.
+- Unless they explicitly told you otherwise, the school may not have actually needed to access your account to find the photos if:
+- If the photographs weren’t actual pornography, the school may have had no right to act in any case and may have infringed on your privacy. Your lawyer can tell you more about this.
+IANAL, and none of this is legal advice. Get a lawyer; you need one. Do not under any circumstances talk to the school or the authorities without your lawyer present.
+You would want to talk to a lawyer about this. They will be able to provide the next direction you and your parents can take.

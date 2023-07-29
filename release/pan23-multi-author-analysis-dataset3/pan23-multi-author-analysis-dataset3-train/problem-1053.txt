@@ -1,0 +1,5 @@
+Reset the password to your email account and go about your life. They didn't do jack shit, they just found your email and password on some sort of combolist from a data breach, tried it and it let them log in to your email. Any monkey can do it. You'll be okay.
+Let me guess, they explicitly demanded you send it in bitcoin right? Its a common scam, dont worry.
+It's a common scam. They're just scaring you. They found your email and password in some leaked database somewhere.
+If the email included a password, it's because your password was included in one or more public leaks. You can probably verify this on -- but you should change your password regardless.
+Change all your passwords too. Make them unique and strong and use a tool like lastpass to store them safely. Most of the time, they either guess your password because it's common, or they compromise another site that stores your login in plain text. Then they try other sites to see if the same login works. Never use the same login on multiple sites!

@@ -1,0 +1,9 @@
+Call the practice manager. Explain to the practice manager that you neither requested nor authorized smoking cessation assistance, nor has any been provided.
+When you talk to the billing department, you need to find out which CPT code they billed your tobacco cessation counseling under. Smoking cessation is usually billed as 99405, 99406, or 99407 and which one they use is strictly defined by the amount of time they spent on the counseling. Long story short, if they spent under 3 minutes of time counseling you, it likely is not billable.
+I would request, in writing, the documentation they are using to support that billing code. The general standards for smoking cessation codes require the following to be documented in the visit.
+• The patient's conditions adversely affected by tobacco use or the therapeutic agent affected by tobacco use;.
+• The amount of time spent on tobacco cessation counseling and the context in which it was provided.
+I'm curious; how is that coordinated with the overall visit coding? Aren't those according to time as well?
+I had this happen a few years ago. I contacted my doctor office first and got nowhere. I reached out to my insurance company and it was removed in about 6 days.
+This would be a supplementary code, separate from the primary level of service code. It used to be designated as a g code to show that but it changed with icd10. The supporting documentation has to be in the doctors note. Something like “counseled patient for 5 minutes on tobacco cessation counseling regarding their cigar use”.
+It’s also kinda weird area with OP because the Dr can absolutely bill for stuff like this, but that it’s a massive patient dissatisfier and can easily drive patients away.

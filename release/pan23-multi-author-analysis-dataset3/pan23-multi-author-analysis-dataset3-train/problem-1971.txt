@@ -1,0 +1,5 @@
+Do not lock it with TSA locks, even if they will allow it. Lock it with a standard set of locks (keyed alike is fine) that only you have the keys or combinations to. When you declare it, the TSA will have you unlock the case to check that it's not loaded, they'll tag it, then you'll lock it and keep the key.
+Be prepared to show your baggage claim receipt to KS TSA or police as they might want to verify that the case truly belongs to you when you are leaving.
+Also, check the firearms policy from your airline's website; it should match the TSA regulations, but you want to comply with both sets of rules.
+As far as flying from NC to KS you should be fine so long as you abide by the rules you've stated and have the proper ID upon landing. It still may be cheaper that buying a hard case, locks, and an additional baggage fee, but I could be wrong.
+My understanding is that you would have needed to have the gun transferred from an FFL in NC to an FFL in Kansas. But that would have likely been brought up in the sale. So do you have a CCW or something that allowed for a non-resident purchase?

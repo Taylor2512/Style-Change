@@ -1,0 +1,5 @@
+Dumb question, then how do they know where they are firing? Is it accurate? Are they just firing in a direction? Is used against fixed structures like barracks and such?
+It's accurate and powerful enough that artillery is the source of most of the casualties in this war.
+Basically, you can do some math about projectile trajectory and the gun should hit within a certain radius of where your math says it will on the map as long as it's in good shape. Often (probably usually or always, but I'm not an artilleryman) they'll do some ranging shots to see how accurate that math/aiming was, since conditions vary with the weather etc., and adjust as necessary until they're on target.
+Gun artillery can be used against pretty much anything that's in range. Troop positions, trenches, vehicles, barracks, ammo stockpiles, etc. A 152/155mm artillery shell will damage or destroy pretty much everything that isn't a bunker if it hits close enough / enough times.
+If you are exposed to the blast rather than in a trench or behind a wall / hill, 155mm can kill up to over 100 meters. OHCHR (UN human rights council) quotes 50-150m as a likely kill radius, and 150m as likely injury.

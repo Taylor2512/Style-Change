@@ -1,0 +1,8 @@
+Sorry but no. She could at best prove that she bought something on a crypto exchange site but she can not prove that the crypto in the wallet is hers. Think of a crypto wallet as a real life wallet. You can claim to have put $100 in my wallet but you can't really prove that $100 of what's in my wallet is yours even with a bank statement showing a withdrawal of $100.
+NAL but someone who's into crypto. There's no way to prove who owns the crypto in the wallet. When it comes to crypto you need to take close care of your wallet to make sure not to lose access to it.
+Your crypto wallet has a public key. Every transaction is public record on the blockchain. It’s pretty easy to get the evidence needed from what happened to the coin in that wallet.
+Well find the bank statement. Email the exchange she used to buy it and get the transaction information. Then sue him for access to her wallet with that specific public key. If she has the private key that’s even better. That should be enough proof to show that she owns that wallet.
+You probably need to clarify how much that wallet is worth. The problem is that to prove how much ethereum there is you need access to the ex laptop. No idea whether the ex can be compelled to provide this access in small claims court per you need a civil suit.
+The hard disk Is the boyfriend so maybe they can successfully argue that they own the wallet saved there.
+The judge may decide that you're girlfriend is entitled to the original value and not the current value, or maybe not.
+I don't think the case is so straightforward for small claims.. And the result can probably vary a lot depending on how the judge will interpret this technological situation.

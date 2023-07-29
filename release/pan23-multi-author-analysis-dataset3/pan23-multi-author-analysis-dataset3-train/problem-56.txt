@@ -1,0 +1,7 @@
+In post /u/grantimatter quotes St. Augustine on why pagans call Jupiter, Jupiter. He thinks it's nonsensical because Venus is brighter and Saturn is higher in the sky, but says the pagans claim it's really the brightest just furthest away.
+(for comparison: the currently accepted distance between the sun and venus is larger than the medieval estimate for the distance from the earth to saturn. So our estimates for the size of the solar system have increased a lot.).
+Campanus of Novara, a 13th century Italian astronomer, estimates the following sizes and distances of the planets:
+In this table are the first two columns Campanus of Novara's estimates of the distances or the currently accepted values? And it does seem that at least by the 13th century we had some sense that Jupiter was the largest planet.
+Is it a coincidence that Jupiter (or Zeus for the Greeks), the biggest planet, got the name of the king of the Roman gods? Or did the Romans and Greeks somehow know that Jupiter was the biggest planet?
+I don't know about the classical authors, but I do know some of the medieval estimates for the sizes of planets. Which were also established without any aid of telescopes.
+Yes, the distances are Campanus' estimates. Every planet is captured inside a solid crystalline sphere, which has an internal diameter and an external diameter. The planet itself is rotating on an epicycle within its crystalline sphere.

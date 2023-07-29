@@ -1,0 +1,6 @@
+The Signal protocol is open source. Whatsapp has been using it for years . The only thing is we dont know what is really implemented.
+Meaning whatsapp is totally aware how many devices linked to your account and generate multiple version of the encrypted message with every public key of your devices.
+As I understand the new devices has no chance to read the older messages because there is no version of the encrypted messages that also encrypted with their private key on the server.
+Elon is an idiot, encryption is good but I'm sceptical of any implementation by Twitter would actually function like signal and have the keys only stored locally on your device.
+Twitter can properly enable Signal encryption within their Android/IOS apps, but for browser-based Twitter users the implementation will either be unavailable or Twitter will have to lie about it being secure.
+And if they manage to pull some kind of shenanigans that make it impossible to fully validate the encryption, maybe some kind of signed security module that only runs in the TCM without letting you see what's running on your own computer and sends packets you can't decode for yourself, then that means Twitter is untrustworthy even if you can't prove that it's sending your secrets to a third party. That would be just as big a red flag as if you caught it CCing Elon Musk personally.

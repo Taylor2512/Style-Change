@@ -1,0 +1,9 @@
+Here’s my understanding in general of NDAs and contracts and lawyer-client confidentiality as it applies to your situation.
+No. Just a transfer of employees. Nobody absorbed any company or subcontracted. X is ending their contract-client relationship with Y. Z will be taking over as the contractor.
+Attorneys are required to keep all attorney-client communications confidential under the doctrine of attorney-client privilege. This privilege is created when an attorney-client relationship is created.
+Okay. Would it be a red flag if a lawyer says "I've worked with disputes/cases involving company Y before"? After confidentiality has been established.
+Ok but the name of the software? What damages could they possibly have, especially if it's an internally developed tool. I feel like you're waaaay over-blowing this.
+While there may be some grey areas in terms of attorney client privilege for initial consultations, or for attorneys that are not formally ‘retained’ yet, no lawyer is going to risk disbarment by sharing details of client interactions, even if technically privilege is not ‘attached’ yet.
+Thanks. Back when I initially made the mistake, I did quickly follow up the next day with an email(we had to email resumes too) that had a updated resume. So I'm hoping they used that instead.
+The exact start of this relationship is a bit nebulous, but in general if you’re talking to a lawyer in his professional capacity and you make it clear that you intend that discussion to be private then the attorney cannot disclose that conversation.
+I have kept notes before out of habit. I remember on what day the VP of Z said no to worry about confidentiality. And when someone from X told us NOT to be specific.
