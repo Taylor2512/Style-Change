@@ -59,6 +59,7 @@ from transformers.modeling_outputs import SequenceClassifierOutput
 from bs4 import BeautifulSoup
 from TextoConParrafos import TextoConParrafos
 import logging
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
@@ -93,10 +94,12 @@ BATCHS_options = [16]
 def main():
     
     model_types = ['mdeberta', 'deberta'] 
+    instancesDataset = [1,2,3] 
     parser = argparse.ArgumentParser(description="PAN23 Style Change Detection Task: Output Verifier")
     parser.add_argument("--output",type=str,help="folder containing output/solution files (json)",required=True,)
     parser.add_argument("--input",type=str,help="folder containing input files for task (txt)",required=True,)
     parser.add_argument("--modelType",type=str,default="mdeberta",help="type model to use",required=False,choices=model_types)
+    parser.add_argument("--instancesDataset",type=str,default=1,help="type model to use",required=False,choices=instancesDataset)
     args = parser.parse_args()
     global tokenizer, config, MODEL,MODEL_TYPE,date_string
     now = datetime.datetime.now()
@@ -113,7 +116,16 @@ def main():
         MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config) 
         MODEL_TYPE=args.modelType
         logging.info("Modelo usado",args.modelType)
+    
+    if args.instancesDataset is not None:
+        carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
+        SaveDataSet(args, carpeta)
+        GenerarModelo(args, carpeta)
+        GenerarSolucion(args, carpeta)
+    else:
+        RecorrerDataset(args)
 
+def RecorrerDataset(args):
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
         SaveDataSet(args, carpeta)
@@ -199,15 +211,34 @@ def GenerarModelo(argss, carpeta):
                       train_dataset=train_set,
                       eval_dataset=eval_dataset,
                       compute_metrics=compute_metrics)
-    def objective(trial):
-        # Definir los hiperparámetros a sintonizar con Optuna
-        learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
-        num_layers = trial.suggest_int('num_layers', 1, 4)
-        # Entrenar el modelo
+    def objective(trial: optuna.Trial):
+        lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
+                     'func_activation': trial.suggest_categorical("func_activ", activation_options)}
+        argss.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
+        argss.evaluation_strategy='epoch', #la evaluación se realiza después de cada época
+        argss.learning_rate=trial.suggest_loguniform('learning_rate', low=lr_rate_min, high=lr_rate_max)
+        # num_train_epochs=3,
+        argss.num_train_epochs=trial.suggest_int('num_epochs', low = MIN_EPOCHS,high = MAX_EPOCHS)
+        argss.remove_unused_columns=False, #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
+        argss.per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
+        argss.per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
+        model = StackedCLSModel(lstm_dict,MODEL,MODEL_TYPE) #inicialización del modelo
+        model.to(device)
+        trainer = Trainer(
+            model=model,
+            compute_metrics=compute_metrics,
+            args=argss,
+            train_dataset=train_set,
+            eval_dataset=eval_dataset)
         trainer.train()
-    
-        # Devolver la métrica que deseas optimizar (por ejemplo, precisión)
-        return trainer.evaluate();
+        #Se define cual sera el objetivo a minimizar o maximizar
+        evaluation_result = trainer.evaluate()
+        #validation_loss = evaluation_result['eval_loss']
+        #train_loss = result.training_loss
+        accuracy = evaluation_result['eval_Accuracy-RC']
+        f1_macro = evaluation_result['eval_F1-macro-RC']
+        #return validation_loss, train_loss , accuracy
+        return f1_macro , accuracy
     study = optuna.create_study(direction='maximize')  # Cambia a 'minimize' si deseas minimizar la métrica
     study.optimize(objective, n_trials=2)  # Ajusta el número de ensayos según tus necesidades
     if len(study.best_trials) != 0:
@@ -619,43 +650,6 @@ def metricas_preds(preds, label):
           'Precision_Score_Weighted_RC': precision_score(label, preds, average='weighted')
 
           }
-def objective(trial: optuna.Trial):
-    
-    lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
-                 'func_activation': trial.suggest_categorical("func_activ", activation_options)}
-
-    model = StackedCLSModel(lstm_dict,MODEL,MODEL_TYPE) #inicialización del modelo
-    model.to(device)
-
-    training_args = TrainingArguments(
-        output_dir='output', #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
-        evaluation_strategy='epoch', #la evaluación se realiza después de cada época
-        learning_rate=trial.suggest_loguniform('learning_rate', low=lr_rate_min, high=lr_rate_max),
-        # num_train_epochs=3,
-        num_train_epochs=trial.suggest_int('num_epochs', low = MIN_EPOCHS,high = MAX_EPOCHS),
-        remove_unused_columns=False, #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
-        per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options),
-        per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options))
-
-    trainer = Trainer(
-        model=model,
-        compute_metrics=compute_metrics,
-        args=training_args,
-        train_dataset=train_set,
-        eval_dataset=eval_dataset)
-
-    trainer.train()
-
-
-    #Se define cual sera el objetivo a minimizar o maximizar
-    evaluation_result = trainer.evaluate()
-    #validation_loss = evaluation_result['eval_loss']
-    #train_loss = result.training_loss
-    accuracy = evaluation_result['eval_Accuracy-RC']
-    f1_macro = evaluation_result['eval_F1-macro-RC']
-
-    #return validation_loss, train_loss , accuracy
-    return f1_macro , accuracy
 
 
 #----------------------------------------------------------------------------------------------------
