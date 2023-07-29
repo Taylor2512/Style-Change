@@ -54,17 +54,27 @@ import optuna.visualization as optuna_visualization
 import plotly
 import optuna
 import numpy as np
+import plotly
+import numpy as np
+import json
 
+from transformers.modeling_outputs import SequenceClassifierOutput
+from bs4 import BeautifulSoup
+
+import optuna
+from optuna.visualization import plot_optimization_history
 from transformers.modeling_outputs import SequenceClassifierOutput
 from bs4 import BeautifulSoup
 from TextoConParrafos import TextoConParrafos
 import logging
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 import time
+import argparse
 
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
 MODEL_TYPE = None
+lstm_dict=None
 logging.basicConfig(filename='registro.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logs = []
@@ -91,7 +101,7 @@ MAX_EPOCHS = 5
 #Batchs
 BATCHS_options = [16]
 
-    
+rutabase = os.getcwd()   
 def GenerarDirectorio(name):
     rutabase = os.getcwd()  # Obtiene la ruta base del proyecto actual
     directorio = os.path.join(rutabase, name)
@@ -133,7 +143,7 @@ def main():
     
     if args.instancesDataset is not None:
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
-        SaveDataSet(args, carpeta)
+        # SaveDataSet(args, carpeta)
         GenerarModelo(args, carpeta)
         GenerarSolucion(args, carpeta)
     else:
@@ -259,31 +269,25 @@ def GenerarModelo(argss, carpeta):
     dataTrainer=   dataTrainer.iloc[:5,:]
     dataEvaluation=   dataEvaluation.iloc[:5,:]
     train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
-    model = StackedCLSModel(MODEL, argss.modelType)
-    trainer = Trainer(model=model,
-                      args=arguments,
-                      train_dataset=train_set,
-                      eval_dataset=eval_dataset,
-                      compute_metrics=compute_metrics)
     def objective(trial: optuna.Trial):
         lstm_dict = {'dropout_rate': trial.suggest_loguniform("dropout", low= dropout_min, high= dropout_max),
                      'func_activation': trial.suggest_categorical("func_activ", activation_options)}
-        argss.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
-        argss.evaluation_strategy='epoch', #la evaluación se realiza después de cada época
-        argss.learning_rate=trial.suggest_loguniform('learning_rate', low=lr_rate_min, high=lr_rate_max)
+        arguments.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
+        arguments.evaluation_strategy='epoch', #la evaluación se realiza después de cada época
+        arguments.learning_rate=trial.suggest_loguniform('learning_rate', low=lr_rate_min, high=lr_rate_max)
         # num_train_epochs=3,
-        argss.num_train_epochs=trial.suggest_int('num_epochs', low = MIN_EPOCHS,high = MAX_EPOCHS)
-        argss.remove_unused_columns=False, #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
-        argss.per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
-        argss.per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
+        arguments.num_train_epochs=trial.suggest_int('num_epochs', low = MIN_EPOCHS,high = MAX_EPOCHS)
+        arguments.remove_unused_columns=False, #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
+        arguments.per_device_train_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
+        arguments.per_device_eval_batch_size=trial.suggest_categorical("batch_opt", BATCHS_options)
         model = StackedCLSModel(lstm_dict,MODEL,MODEL_TYPE) #inicialización del modelo
-        model.to(device)
+        
         trainer = Trainer(
             model=model,
             compute_metrics=compute_metrics,
-            args=argss,
-            train_dataset=train_set,
-            eval_dataset=eval_dataset)
+            args=arguments,
+            train_dataset=train_set,eval_dataset=eval_dataset)
+        
         trainer.train()
         #Se define cual sera el objetivo a minimizar o maximizar
         evaluation_result = trainer.evaluate()
@@ -291,11 +295,12 @@ def GenerarModelo(argss, carpeta):
         #train_loss = result.training_loss
         accuracy = evaluation_result['eval_Accuracy-RC']
         f1_macro = evaluation_result['eval_F1-macro-RC']
+        eval_loss = evaluation_result['eval_loss']
         #return validation_loss, train_loss , accuracy
-        return f1_macro , accuracy
+        return f1_macro , accuracy,eval_loss
     
     print('Activación del estudio de Optuna')
-    study = optuna.create_study(directions=["maximize", "maximize"]) # multiples objetivos
+    study = optuna.create_study(directions=["maximize", "maximize","minimize"]) # multiples objetivos
     #para ejecución sin early stop
     #study.optimize(func=objective, n_trials=NUM_TRIALS)
     # ejecucion con early stop
@@ -389,18 +394,18 @@ def GenerarModelo(argss, carpeta):
     
     # definir bien los arg
       # configuracion o argumentos de la forma en que se realizará el entrenamiento y evaluacion del modelo
-    argss.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
-    argss.evaluation_strategy='epoch' #la evaluación se realiza después de cada época
-    argss.learning_rate=best_lr
-    argss. num_train_epochs = best_epochs
-    argss.remove_unused_columns=False #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
-    argss.per_device_train_batch_size=best_batch #Tamaño del lote de entrenamiento por dispositivo
-    argss.per_device_eval_batch_size=best_batch #Tamaño del lote de evaluación por dispositivo
+    arguments.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
+    arguments.evaluation_strategy='epoch' #la evaluación se realiza después de cada época
+    arguments.learning_rate=best_lr
+    arguments. num_train_epochs = best_epochs
+    arguments.remove_unused_columns=False #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
+    arguments.per_device_train_batch_size=best_batch #Tamaño del lote de entrenamiento por dispositivo
+    arguments.per_device_eval_batch_size=best_batch #Tamaño del lote de evaluación por dispositivo
     
     trainer = MyTrainer(
     model=model,
     compute_metrics=compute_metrics,
-    args=argss,
+    args=arguments,
     train_dataset=train_set,
     eval_dataset=eval_dataset)
     
@@ -539,7 +544,7 @@ def SaveDatasetComplete(folder, args, Lista):
        texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
 # Definir bien los argumentos
 arguments = TrainingArguments(
-    output_dir='output',  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
+    output_dir=os.join(rutabase, 'output'),  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
     evaluation_strategy='epoch',  # Evaluación del modelo al final de cada época
     num_train_epochs=1,  # Número total de épocas de entrenamiento
     per_device_train_batch_size=16,  # Tamaño del lote de entrenamiento por dispositivo. Ajustar según la memoria GPU disponible
@@ -547,7 +552,7 @@ arguments = TrainingArguments(
     learning_rate=5e-5,  # Tasa de aprendizaje utilizada en el entrenamiento
     overwrite_output_dir=True,  # Sobrescribir el directorio de salida si ya existe
     remove_unused_columns=False,  # No eliminar columnas no utilizadas del conjunto de datos
-    logging_dir='logs',  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
+    logging_dir=os.join(rutabase, 'logsArgs'),  # Ruta del directorio donde se guardarán los archivos de registro del entrenamiento
     logging_steps=10,  # Número de pasos después de los cuales se realizará el registro
     save_strategy='epoch',  # Estrategia de guardado del modelo: al final de cada época
     save_total_limit=10,  # Límite total de modelos guardados
@@ -671,51 +676,6 @@ class MyDataset(Dataset):             # define una nueva clase MyDataset que her
           def __len__(self):
               return self.len   # devuelve la longitud del conjunto de datos personalizado
 
-class StackedCLSModel(nn.Module):
-      def __init__(self,lstm_dict, model=MODEL, model_type=MODEL_TYPE):
-        super(StackedCLSModel, self).__init__()
-                            # método __init__ nos aseguramos de que el módulo de red neuronal herede las propiedades y métodos de la clase nn.Module
-        self.model = MODEL # almacene la ruta al modelo pre-entrenado el tipo de modelo
-        self.model_type = MODEL_TYPE # almacene la ruta al tipo de modelo
-        self.Fusion = nn.Parameter(torch.zeros(12,1)) # se utiliza para crear un tensor de tamaño (12, 1) lleno de ceros y convertirlo en un parámetro de la red neuronal para que pueda ser optimizado durante el entrenamiento.
-        self.dropout =  nn.Dropout(lstm_dict['dropout_rate']) # crea una capa de abandono con una probabilidad de abandono de 0,3
-
-        #escoger la función de activación mas apropiada.
-        if lstm_dict['func_activation'] == "tanh":
-          self.funActivacion = nn.Tanh()
-        elif lstm_dict['func_activation'] == "relu":
-          self.funActivacion = nn.ReLU()
-        elif lstm_dict['func_activation'] == "gelu":
-          self.funActivacion = nn.GELU()
-
-        self.lin1 = nn.Linear(768, 384)#crea una capa lineal en PyTorch que se utiliza en una red neuronal
-                                       #para realizar una transformación lineal de las características de entrada de tamaño 768 a características de salida de tamaño 128
-                                       #que se utiliza en un modelo BERT para procesar la entrada de texto.
-        self.lin2 = nn.Linear(384, 2)
-        self.loss_func = nn.CrossEntropyLoss() # establece la función de pérdida que se utilizará durante el entrenamiento
-      def forward(self, input_ids, attention_mask, labels=None):
-        outputs = self.model(input_ids, attention_mask=attention_mask)
-        if self.model_type == "mdeberta":
-          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
-        elif self.model_type == "deberta":
-          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
-        t_cls_tensors = cls_tensors.transpose(1, 0)
-        t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
-        x = self.lin1(t_cls_tensors_mean)
-        x = self.dropout(x)
-        x = self.funActivacion(x)
-        logit = self.lin2(x)
-        loss = None
-        if labels is not None:
-          loss = self.loss_func(logit, labels.float())
-
-        return SequenceClassifierOutput(loss=loss, logits=logit)
-      def predict(self, input_ids, attention_mask,labels=None):
-          logits = self.forward(input_ids, attention_mask, labels=None)
-          predicciones = logits.logits.argmax(dim=1)
-          #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
-          return predicciones.tolist()
-
 class MyTrainer(Trainer):
       def _init_(self, **kwargs):
             super()._init_(**kwargs)
@@ -777,25 +737,28 @@ def auc_score(train_data, test_data):
     except ValueError:
         return 0.0
 def compute_metrics(p: EvalPrediction): # calcula diversas métricas de evaluación
-  preds = np.argmax(p.predictions,axis=-1)
-  preds = np.squeeze(preds)
-  labels = np.argmax(p.label_ids,axis=-1)
-  labels = np.squeeze(labels)
-  precision = precision_score(labels, preds, average='micro')
-  precision_macro = precision_score(labels, preds, average='macro')
-  auc = auc_score(labels, preds)
-  #mse = metrics.mean_squared_error(labels, preds)# Se toma el primer indice del label
-  #print("SIZES::::",labels.shape, preds.shape)
-  return {
-          'auc': auc,
-          'c@1': c_at_1(labels, preds),
-          'f_05_u': f_05_u_score(labels, preds),
-          'F1': f1_score(labels, preds, average = 'micro'),
-          'brier': brier_score(labels, preds),
-          'precision micro': precision,
-          'precision macro': precision_macro
-          } 
+  #preds = p.predictions if isinstance(p.predictions, tuple) else p.predictions   # si es una tupla, entonces preds se establece como el primer elemento de la tupla
+                                                                                  # si no es una tupla, entonces se asume que es un tensor de predicciones, y preds se establece en este tensor.
+  preds_labels = np.argmax(p.predictions,axis=-1)    # axis esta tomando el mayor indice
+  preds_labels = np.squeeze(preds_labels) # elimina dimensiones de tamaño 1 del tensor de predicciones preds
 
+  true_labels = np.argmax(p.label_ids,axis=-1)
+  true_labels = np.squeeze(true_labels) # elimina dimensiones de tamaño 1 del y del tensor de etiqueta p.label_ids
+                                  # los valores del label salen del test-set aqui toma dos elementos [0,1] el cual el elmento del array de la posicion 1
+                                  # es el que se sale de la columna "same" "humano o generado" y la posicion 0 sale del calculo en la clase MyDataset
+
+  print("SIZES::::",true_labels.shape,preds_labels.shape)
+  return {
+          'F1-macro-RC': f1_score(true_labels, preds_labels, average='macro'),
+          'F1-bynary-RC': f1_score(true_labels, preds_labels, average='binary'),
+          'Accuracy-RC': accuracy_score(true_labels, preds_labels),
+          'Precision_Score_Macro_RC': precision_score(true_labels, preds_labels, average='macro'),
+          'Precision_Score_Micro_RC': precision_score(true_labels, preds_labels, average='micro'),
+          'Precision_Score_Weighted_RC': precision_score(true_labels, preds_labels, average='weighted'),
+          'Recall_Score_Macro_RC':  recall_score(true_labels, preds_labels, average='macro'),
+          'Recall_Score_Micro_RC':  recall_score(true_labels, preds_labels, average='micro'),
+          'Recall_Score_Weighted_RC':  recall_score(true_labels, preds_labels, average='weighted')
+          }
 # Metricas realizadas durante la predicción
 def metricas_preds(preds, label):
   return {
@@ -846,7 +809,52 @@ def SaveJson(paths,model):
     with open(paths, "w") as archivo:
         # Guardar el diccionario como JSON en el archivo
         json.dump(model, archivo)
-    
+
+class StackedCLSModel(nn.Module):
+      def __init__(self,lstm_dict, model=MODEL, model_type=MODEL_TYPE):
+        super(StackedCLSModel, self).__init__()
+                            # método __init__ nos aseguramos de que el módulo de red neuronal herede las propiedades y métodos de la clase nn.Module
+        self.model = MODEL # almacene la ruta al modelo pre-entrenado el tipo de modelo
+        self.model_type = MODEL_TYPE # almacene la ruta al tipo de modelo
+        self.Fusion = nn.Parameter(torch.zeros(12,1)) # se utiliza para crear un tensor de tamaño (12, 1) lleno de ceros y convertirlo en un parámetro de la red neuronal para que pueda ser optimizado durante el entrenamiento.
+        self.dropout =  nn.Dropout(lstm_dict['dropout_rate']) # crea una capa de abandono con una probabilidad de abandono de 0,3
+
+        #escoger la función de activación mas apropiada.
+        if lstm_dict['func_activation'] == "tanh":
+          self.funActivacion = nn.Tanh()
+        elif lstm_dict['func_activation'] == "relu":
+          self.funActivacion = nn.ReLU()
+        elif lstm_dict['func_activation'] == "gelu":
+          self.funActivacion = nn.GELU()
+
+        self.lin1 = nn.Linear(768, 384)#crea una capa lineal en PyTorch que se utiliza en una red neuronal
+                                       #para realizar una transformación lineal de las características de entrada de tamaño 768 a características de salida de tamaño 128
+                                       #que se utiliza en un modelo BERT para procesar la entrada de texto.
+        self.lin2 = nn.Linear(384, 2)
+        self.loss_func = nn.CrossEntropyLoss() # establece la función de pérdida que se utilizará durante el entrenamiento
+      def forward(self, input_ids, attention_mask, labels=None):
+        outputs = self.model(input_ids, attention_mask=attention_mask)
+        if self.model_type == "mdeberta":
+          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+        elif self.model_type == "deberta":
+          cls_tensors = torch.stack([outputs[1][n][:, 0, :] for n in range(1, 13)])
+        t_cls_tensors = cls_tensors.transpose(1, 0)
+        t_cls_tensors_mean = torch.mean(t_cls_tensors, dim=1)  # Reducción de la dimensión 12 a 2
+        x = self.lin1(t_cls_tensors_mean)
+        x = self.dropout(x)
+        x = self.funActivacion(x)
+        logit = self.lin2(x)
+        loss = None
+        if labels is not None:
+          loss = self.loss_func(logit, labels.float())
+
+        return SequenceClassifierOutput(loss=loss, logits=logit)
+      def predict(self, input_ids, attention_mask,labels=None):
+          logits = self.forward(input_ids, attention_mask, labels=None)
+          predicciones = logits.logits.argmax(dim=1)
+          #   predicciones =np.argmax(predicciones.tolist(),axis=-1)
+          return predicciones.tolist()
+ 
 if __name__ == "__main__":
     main() 
     
