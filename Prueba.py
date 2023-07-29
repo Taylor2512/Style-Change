@@ -60,6 +60,7 @@ from bs4 import BeautifulSoup
 from TextoConParrafos import TextoConParrafos
 import logging
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+import time
 
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
@@ -89,6 +90,19 @@ MAX_EPOCHS = 5
 
 #Batchs
 BATCHS_options = [16]
+
+    
+def GenerarDirectorio(name):
+    rutabase = os.getcwd()  # Obtiene la ruta base del proyecto actual
+    directorio = os.path.join(rutabase, name)
+    if not os.path.exists(directorio):
+        os.makedirs(directorio)
+    return directorio
+def format_time(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
+
 
 
 def main():
@@ -124,6 +138,20 @@ def main():
         GenerarSolucion(args, carpeta)
     else:
         RecorrerDataset(args)
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
+# Guardar los mejores parametros en un archivo
+PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
+# Guardar graficas y resultados
+PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
+PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
+PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
+PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
+PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
+PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
+PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
+PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
+PATH_result_predict = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
 
 def RecorrerDataset(args):
     for i in range(1, 4):
@@ -143,22 +171,35 @@ def GenerarSolucion(argss, carpeta):
     train= os.path.join(argss.input, carpeta) 
     if argss.modelType=='mdeberta': 
         datatest = pd.read_json(os.path.join(train,carpeta+'-test','mdebertaTokenizer.json'))
+        # Leer el contenido del archivo JSON como una cadena
+        with open(PATH_parametros, 'r') as file:
+            json_data = file.read()
+        # Cargar el objeto JSON desde la cadena
+        lstm_dict = json.loads(json_data)
     elif argss.modelType=='deberta':
         datatest = pd.read_json(os.path.join(train,carpeta+'-test','ebertaTokenizer.json'))
-    direccion=GenerarDirectorio('best_model')
-    rutamodel=os.path.join(direccion,'best_model.pth')
-    modelo_cargado = torch.load(rutamodel)
-    # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
+        # Leer el contenido del archivo JSON como una cadena
+        with open(PATH_parametros, 'r') as file:
+            json_data = file.read()
+        # Cargar el objeto JSON desde la cadena
+        lstm_dict = json.loads(json_data)
+  
+    modelo_cargado = StackedCLSModel(lstm_dict,MODEL, MODEL_TYPE)
+    modelo_cargado.load_state_dict(
+    torch.load(PATH_modelo, map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
     df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
     # Agrupar los datos por el valor de "id"
-    grouped_df = df.groupby("id")
+    # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
+     # Agrupar los datos por el valor de "id"
+    grouped_df = datatest.groupby("id")
     # Crear una lista para almacenar los DataFrames agrupados
     dataframes_list = []
-    folder= argss.input
+    # folder= argss.input
+    predict_test = []
 
-    folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
-    if not os.path.exists(folderComplete):
-        os.makedirs(folderComplete)
+    # folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
+    # if not os.path.exists(folderComplete):
+    #     os.makedirs(folderComplete)
     # Recorrer los grupos y crear un DataFrame agrupado por cada grupo
     for group_id, group_data in grouped_df:
         # Crear un nuevo DataFrame agrupado por ID
@@ -170,19 +211,32 @@ def GenerarSolucion(argss, carpeta):
         mydata = MyDataset(dataforinstans)
         instansc= dataforinstans['id'].iloc[0]
         # Crear un DataLoader para recorrer el dataset
-        dataloader = DataLoader(mydata, batch_size=16, shuffle=True)  # Ajusta el tamaño del lote según tus necesidades
+        dataloader = DataLoader(mydata, batch_size=len(dataforinstans), shuffle=True)  # Ajusta el tamaño del lote según tus necesidades
         # Recorrer el DataLoader
         for batch in dataloader:
             input_ids = batch['input_ids']
             attention_mask = batch['attention_mask']
             labels = batch['labels']
             predicciones=modelo_cargado.predict(input_ids, attention_mask,labels)
-            data={'changes': [predicciones]}
+            labes2= labels.argmax(dim=1)
+            data={'predict': predicciones,'labels':labes2.tolist()}
+            predict_test.append(data) #agregamos los datos en un array que continene el orden de las filas que vamos a predecir
+
             # Crear el DataFrame a partir de la lista de diccionarios
-            texts = pd.DataFrame(data) 
-            texts.to_json(os.path.join(folderComplete, f'solution-problem-{instansc}.json'), orient='records')
-                 
-    
+   
+    predict_test = pd.DataFrame(predict_test)                
+    # Agrupar las listas en una sola lista por cada variable
+    predict_grouped = {
+        'predict': [item for sublist in predict_test['predict'] for item in sublist],
+        'labels': [item for sublist in predict_test['labels'] for item in sublist]}
+
+    resultados_preds = metricas_preds(predict_grouped['predict'],predict_grouped['labels'])
+
+    with open(PATH_result_predict, "w") as archivo:
+        # Guardar el diccionario como JSON en el archivo
+        json.dump(resultados_preds, archivo)
+
+    matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])  
 def SaveDataSet(args, carpeta):
     folder= args.input
     folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
@@ -239,50 +293,153 @@ def GenerarModelo(argss, carpeta):
         f1_macro = evaluation_result['eval_F1-macro-RC']
         #return validation_loss, train_loss , accuracy
         return f1_macro , accuracy
-    study = optuna.create_study(direction='maximize')  # Cambia a 'minimize' si deseas minimizar la métrica
-    study.optimize(objective, n_trials=2)  # Ajusta el número de ensayos según tus necesidades
-    if len(study.best_trials) != 0:
-        best_trial = study.best_trials[0]  # Obtén el primer mejor resultado
-        learning_rate = best_trial.params['learning_rate']
-        arguments.learning_rate=learning_rate
-
-        num_layers = best_trial.params['num_layers']
-        arguments.num_train_epochs=num_layers
-     
-    trainer = Trainer(model=model,
-                      args=arguments,
-                      train_dataset=train_set,
-                      eval_dataset=eval_dataset,
-                      compute_metrics=compute_metrics)
-    result=trainer.train()
-    metrics=trainer.state.log_history
-    metrics=normalizar_propiedades(metrics)
-    generarGrafico(metrics)
-    direccion=GenerarDirectorio('best_model')
-    rutamodel=os.path.join(direccion,'best_model.pth')
-    torch.save(trainer.model, rutamodel)
     
-def GenerarDirectorio(name):
-    rutabase = os.getcwd()  # Obtiene la ruta base del proyecto actual
-    directorio = os.path.join(rutabase, name)
-    if not os.path.exists(directorio):
-        os.makedirs(directorio)
-    return directorio
+    print('Activación del estudio de Optuna')
+    study = optuna.create_study(directions=["maximize", "maximize"]) # multiples objetivos
+    #para ejecución sin early stop
+    #study.optimize(func=objective, n_trials=NUM_TRIALS)
+    # ejecucion con early stop
+    try:
+        study.optimize(objective, callbacks=[early_stopping_opt])
+    except EarlyStoppingExceeded:
+        print(f'EarlyStopping Exceeded: No hay nuevos mejores puntajes en iteraciones {OPTUNA_EARLY_STOPING}')
+    
+    #### Guardar historial ###
+    trials_df = study.trials_dataframe()
+    trials_df.to_csv(PATH_historial_optuna, index=False)
+      
+    #----------------------------------------------------------------------------------------------------
+    #                    Gráficas
+    #----------------------------------------------------------------------------------------------------
+    
+    ### Grafico 1 ###
+    grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["f1", "accuracy"])
+    # Ajustar el tamaño de la figura
+    fig1 = grafico_optuna1.figure
+    fig1.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
+    fig1.savefig(PATH_grafico_optuna, dpi=400)  # Guardado de imagen
+    
+    
+    ### Grafico 2 ###
+    grafico_optuna2 = optuna.visualization.matplotlib.plot_optimization_history(study, target=lambda t: t.values[0])
+    # Ajustar el tamaño de la figura
+    fig2 = grafico_optuna2.figure
+    fig2.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
+    fig2.savefig(PATH_grafico_optuna_param, dpi=400)  # Guardado de imagen
+   
+    
+    #----------------------------------------------------------------------------------------------------
+    #                    Parametros encontrados con Optuna
+    #----------------------------------------------------------------------------------------------------
+    
+    print(study.best_trials)
+    resultados_optuna = max(study.best_trials, key=lambda t: t.values[1])
+    print(resultados_optuna.values)
+    
+    print('Encontrar los mejores parámetros del estudio')
+    
+    best_dropout = float(resultados_optuna.params['dropout'])
+    best_func_act = resultados_optuna.params['func_activ']
+    best_lr = float(resultados_optuna.params['learning_rate'])
+    best_epochs = float(resultados_optuna.params['num_epochs'])
+    best_batch = resultados_optuna.params['batch_opt']
+    
+    print('Extraer los mejores parámetros de estudio')
+    
+    print(f'El mejor dropout es: {best_dropout}')
+    print(f'La mejor funcion de activación es: {best_func_act}')
+    print(f'El mejor learning rate is: {best_lr}')
+    print(f'El mejor epochs is: {best_epochs}')
+    print(f'El mejor batch is: {best_batch}')
+    
+    
+    print('Crear diccionario de los mejores hiperparámetros')
+    best_hp_dict = {
+        'dropout_rate' : best_dropout,
+        'func_activation' : best_func_act,
+        'best_learning_rate' : best_lr,
+        'best_epochs': best_epochs,
+        'best_batch' : best_batch
+    }
+    
+    # Abrir el archivo en modo escritura
+    with open(PATH_parametros, "w") as archivo:
+        # Guardar el diccionario como JSON en el archivo
+        json.dump(best_hp_dict, archivo) 
+    
+    # Leer el contenido del archivo JSON como una cadena
+    with open(PATH_parametros, 'r') as file:
+        json_data = file.read()
+   
+    # Cargar el objeto JSON desde la cadena
+    data_dict = json.loads(json_data) 
+    #----------------------------------------------------------------------------------------------------
+    #                    Entrenamiento con los mejores parametros
+    #----------------------------------------------------------------------------------------------------
+    if data_dict is None:
+        lstm_dict = None
+        lstm_dict = {'dropout_rate': best_dropout,
+                     'func_activation': best_func_act}
+    else:
+        lstm_dict = data_dict
+    
+        
+    #model = None
+    model = StackedCLSModel(lstm_dict,MODEL, MODEL_TYPE) #inicialización del modelo
+    
+    # definir bien los arg
+      # configuracion o argumentos de la forma en que se realizará el entrenamiento y evaluacion del modelo
+    argss.output_dir='output' #Directorio de salida donde se guardarán los archivos generados durante el entrenamiento
+    argss.evaluation_strategy='epoch' #la evaluación se realiza después de cada época
+    argss.learning_rate=best_lr
+    argss. num_train_epochs = best_epochs
+    argss.remove_unused_columns=False #se eliminarán las columnas no utilizadas en los datos de entrenamiento y evaluación
+    argss.per_device_train_batch_size=best_batch #Tamaño del lote de entrenamiento por dispositivo
+    argss.per_device_eval_batch_size=best_batch #Tamaño del lote de evaluación por dispositivo
+    
+    trainer = MyTrainer(
+    model=model,
+    compute_metrics=compute_metrics,
+    args=argss,
+    train_dataset=train_set,
+    eval_dataset=eval_dataset)
+    
+    start_time = time.time() 
+    result=trainer.train()
+    end_time = time.time()
+    # Calcular el tiempo total de entrenamiento en segundos
+    training_time = end_time - start_time
 
+    # Formatear el tiempo a horas, minutos y segundos
+    formatted_time = format_time(training_time)
+    print(f"Tiempo de entrenamiento: {formatted_time}")
+    
+    
+    print("Training")
+    evaluation_result = trainer.evaluate()
+    
+    with open(PATH_result_train, "w") as archivo:
+        # Guardar el diccionario como JSON en el archivo
+        json.dump(result, archivo)
+    
+    with open(PATH_result_eval, "w") as archivo:
+        # Guardar el diccionario como JSON en el archivo
+        json.dump(evaluation_result, archivo)
+    
 
-PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
-PATH_modelo = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}entrenamiento"), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
-# Guardar los mejores parametros en un archivo
-PATH_parametros = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-mejores_hiperparametros-rango.json")
-# Guardar graficas y resultados
-PATH_resultados_preds = os.path.join(GenerarDirectorio( f"{MODEL_TYPE}resultados"),f"{MODEL_TYPE}EN-resultado_metricas_preds-rango.json")
-PATH_predicciones = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-dataPreds_predicciones-rango.json")
-PATH_imagen_matriz = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-matriz_confusion_preds-rango.png")
-PATH_grafico_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna-rango.png")
-PATH_grafico_optuna_param = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-grafico_optuna_trials-rango.png")
-PATH_historial_optuna = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}historial_optuna"), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
-PATH_result_train = os.path.join(GenerarDirectorio( "resultados"),f"{MODEL_TYPE}EN-resultados-train-metricas.json")
-PATH_result_eval = os.path.join(GenerarDirectorio(f"{MODEL_TYPE}resultados"), f"{MODEL_TYPE}EN-resultados-eval-metricas.json")
+#----------------------------------------------------------------------------------------------------
+#                    Guardado del modelo
+#----------------------------------------------------------------------------------------------------
+
+    torch.save(trainer.model.state_dict(), PATH_modelo)
+
+    #     metrics=trainer.state.log_history
+    # metrics=normalizar_propiedades(metrics)
+    # generarGrafico(metrics)
+    # direccion=GenerarDirectorio('best_model')
+    # rutamodel=os.path.join(direccion,'best_model.pth')
+    # torch.save(trainer.model, rutamodel)
+
 def remove_html_tags(text):
     soup = BeautifulSoup(text, "html.parser")
     stripped_text = soup.get_text()
@@ -683,91 +840,7 @@ def early_stopping_opt(study, trial):
     #print(f'EarlyStop counter: {EarlyStoppingExceeded.early_stop_count}, Best score: {study.best_value} and {EarlyStoppingExceeded.best_score}')
     return
 
-
-#----------------------------------------------------------------------------------------------------
-#                    Creación del estudio Optuna
-#----------------------------------------------------------------------------------------------------
-
-print('Activación del estudio de Optuna')
-study = optuna.create_study(directions=["maximize", "maximize"]) # multiples objetivos
-
-#para ejecución sin early stop
-#study.optimize(func=objective, n_trials=NUM_TRIALS)
-
-# ejecucion con early stop
-try:
-    study.optimize(objective, callbacks=[early_stopping_opt])
-except EarlyStoppingExceeded:
-    print(f'EarlyStopping Exceeded: No hay nuevos mejores puntajes en iteraciones {OPTUNA_EARLY_STOPING}')
-
-#### Guardar historial ###
-trials_df = study.trials_dataframe()
-trials_df.to_csv(PATH_historial_optuna, index=False)
-
-
-
-
-#----------------------------------------------------------------------------------------------------
-#                    Gráficas
-#----------------------------------------------------------------------------------------------------
-
-### Grafico 1 ###
-grafico_optuna1 = optuna.visualization.matplotlib.plot_pareto_front(study, target_names=["f1", "accuracy"])
-# Ajustar el tamaño de la figura
-fig1 = grafico_optuna1.figure
-fig1.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
-fig1.savefig(PATH_grafico_optuna, dpi=400)  # Guardado de imagen
-
-
-### Grafico 2 ###
-grafico_optuna2 = optuna.visualization.matplotlib.plot_optimization_history(study, target=lambda t: t.values[0])
-# Ajustar el tamaño de la figura
-fig2 = grafico_optuna2.figure
-fig2.set_size_inches(20, 10)  # Ajusta el tamaño según tus necesidades
-fig2.savefig(PATH_grafico_optuna_param, dpi=400)  # Guardado de imagen
-
-
-
-
-
-
-#----------------------------------------------------------------------------------------------------
-#                    Parametros encontrados con Optuna
-#----------------------------------------------------------------------------------------------------
-
-print(study.best_trials)
-resultados_optuna = max(study.best_trials, key=lambda t: t.values[1])
-print(resultados_optuna.values)
-
-print('Encontrar los mejores parámetros del estudio')
-
-best_dropout = float(resultados_optuna.params['dropout'])
-best_func_act = resultados_optuna.params['func_activ']
-best_lr = float(resultados_optuna.params['learning_rate'])
-best_epochs = float(resultados_optuna.params['num_epochs'])
-best_batch = resultados_optuna.params['batch_opt']
-
-print('Extraer los mejores parámetros de estudio')
-
-print(f'El mejor dropout es: {best_dropout}')
-print(f'La mejor funcion de activación es: {best_func_act}')
-print(f'El mejor learning rate is: {best_lr}')
-print(f'El mejor epochs is: {best_epochs}')
-print(f'El mejor batch is: {best_batch}')
-
-
-print('Crear diccionario de los mejores hiperparámetros')
-best_hp_dict = {
-    'dropout_rate' : best_dropout,
-    'func_activation' : best_func_act,
-    'best_learning_rate' : best_lr,
-    'best_epochs': best_epochs,
-    'best_batch' : best_batch
-}
-
-
-
-
+ 
 def SaveJson(paths,model):
     # Abrir el archivo en modo escritura
     with open(paths, "w") as archivo:
