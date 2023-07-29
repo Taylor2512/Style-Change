@@ -111,11 +111,12 @@ lr_rate_max = 5e-5
 #epochs
 MIN_EPOCHS = 1
 MAX_EPOCHS = 5
-OPTUNA_EARLY_STOPING = 4 # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
+OPTUNA_EARLY_STOPING = 10# poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 #Batchs
 BATCHS_options = [8,16,32,64]
-rutabase = "/content/drive/MyDrive/003"
+# rutabase = "/content/drive/MyDrive/003"
+rutabase = os.getcwd() 
 
 def GenerarDirectorio(name):
     directorio = os.path.join(rutabase, name)
