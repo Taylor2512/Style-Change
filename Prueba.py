@@ -89,7 +89,6 @@ PATH_result_train = None
 PATH_result_eval = None
 PATH_result_predict = None
  
-logging.basicConfig(filename='registro.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logs = []
 #----------------------------------------------------------------------------------------------------
@@ -114,7 +113,7 @@ MAX_EPOCHS = 5
 OPTUNA_EARLY_STOPING = 10# poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 #Batchs
-BATCHS_options = [8,16,32,64]
+BATCHS_options = [8]
 # rutabase = "/content/drive/MyDrive/003"
 rutabase = os.getcwd() 
 
@@ -129,9 +128,14 @@ def format_time(seconds):
     return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
 
+def configurar_registro():
+    # Configurar el registro con el archivo de registro "registro.log"
+    logging.basicConfig(filename= os.path.join(GenerarDirectorio("loger"),"registro.log"), level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def main():
-
+    configurar_registro();
     model_types = ['mdeberta', 'deberta']
     instancesDataset = [1,2,3]
     parser = argparse.ArgumentParser(description="PAN23 Style Change Detection Task: Output Verifier")
@@ -176,7 +180,7 @@ def main():
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
-        # SaveDataSet(args, carpeta)
+        SaveDataSet(args, carpeta)
         GenerarModelo(args, carpeta)
         print("Modelo generado")
         logging.info("--------- MODELO GENERADO ---------")

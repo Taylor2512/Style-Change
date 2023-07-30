@@ -8,9 +8,9 @@
         {
              "args": [
                  "--input",
-                "C:\\DataSets\\release", 
+                "release", 
                 "--output", 
-                "C:\\DataSets\\release",
+                "release",
                 "--modelType",
                 "mdeberta"
             ],
