@@ -1,77 +1,37 @@
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
-import os
-import numpy as np
-from sqlalchemy import String
-import torch
-import torch.nn as nn
-from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer,DebertaTokenizer,DebertaConfig
-import os
-from glob import glob
-import argparse
-import json
-import pandas as pd
-import ast
-from typing import List
-from sklearn.metrics import accuracy_score
-import torch
-from transformers import DebertaModel, BertModel, BertConfig, BertTokenizer
-import os
-import re
-from glob import glob
-import pandas as pd
-import numpy as np
 import datetime
-from torch.utils.data import Dataset, DataLoader
-import torch
-import torch.nn as nn
-import re
-import re,os
-import unicodedata
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
-from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
-from transformers import Trainer, TrainingArguments, EvalPrediction,DataCollatorWithPadding, Trainer, TrainingArguments, AutoModelForSequenceClassification
-from transformers import BertModel, BertConfig, BertTokenizer, DebertaConfig, DebertaModel, DebertaTokenizer,DebertaV2Model, DebertaV2Config,DebertaV2Tokenizer,AutoTokenizer,AutoModel,AutoConfig
-import optuna.visualization as optuna_visualization
-import plotly
-import optuna
-import numpy as np
- 
 import random
-import pandas as pd
-import numpy as np
-import datetime
-from torch.utils.data import Dataset, DataLoader
-import torch
-import torch.nn as nn
 import re,os
 import unicodedata
-import matplotlib.pyplot as plt
-import itertools
-import sklearn.metrics as metrics
-from sklearn import metrics, feature_selection
-from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss,accuracy_score,classification_report,accuracy_score,confusion_matrix,recall_score,precision_score,roc_curve
-from transformers import Trainer, TrainingArguments, EvalPrediction,DataCollatorWithPadding, Trainer, TrainingArguments, AutoModelForSequenceClassification
-from transformers import BertModel, BertConfig, BertTokenizer, DebertaConfig, DebertaModel, DebertaTokenizer,DebertaV2Model, DebertaV2Config,DebertaV2Tokenizer,AutoTokenizer,AutoModel,AutoConfig
-import optuna.visualization as optuna_visualization
-import plotly
-import optuna
 import numpy as np
-import plotly
-import numpy as np
-import json
-from transformers.modeling_outputs import SequenceClassifierOutput
-from bs4 import BeautifulSoup
-import optuna
-from optuna.visualization import plot_optimization_history
-from transformers.modeling_outputs import SequenceClassifierOutput
-from bs4 import BeautifulSoup
-import logging
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-import time
+import torch
+import torch.nn as nn
 import argparse
+import json
+import pandas as pd
+from glob import glob
+from typing import List
+from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, brier_score_loss, confusion_matrix, recall_score, precision_score
+from transformers import (
+    Trainer,
+    TrainingArguments,
+    EvalPrediction,
+    DebertaConfig,
+    DebertaModel,
+    DebertaTokenizer,
+    AutoTokenizer,
+    AutoModel,
+    AutoConfig,
+)
+import optuna
+from torch.utils.data import Dataset, DataLoader
+from bs4 import BeautifulSoup
+from transformers.modeling_outputs import SequenceClassifierOutput
+import logging
+import time
+
+
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 PATH_carpeta = "/mnt/beegfs/cher0001/AuTexTification/salidas/deBERTaP3/"
 ModelPathbase=None
 # Definir las variables globales MODEL y MODEL_TYPE
@@ -297,7 +257,7 @@ def GenerarSolucion(argss, carpeta):
 
     matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])
     print("matriz Confunzion",matriz_confusion)
-    GenerarMatrizConfuncion(matriz_confusion)
+    # GenerarMatrizConfuncion(matriz_confusion)
 
 def SaveDataSet(args, carpeta):
     folder= args.input
@@ -764,94 +724,94 @@ def _getvalores(data,key):{
   [metric[key] for metric in data if key in data]
 }
 
-def generarGrafico(metrics,numero=2):
-    metricas2 = agrupar_propiedades(metrics)
-    fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    # Configurar el gráfico
-    plt.figure(figsize=(10, 8))
-    plt.title('Métricas de entrenamiento por época')
-    plt.xlabel('Época')
-    plt.ylabel('Valor de la métrica')
-    plt.ylim(0, 1.5)
+# def generarGrafico(metrics,numero=2):
+#     metricas2 = agrupar_propiedades(metrics)
+#     fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+#     # Configurar el gráfico
+#     plt.figure(figsize=(10, 8))
+#     plt.title('Métricas de entrenamiento por época')
+#     plt.xlabel('Época')
+#     plt.ylabel('Valor de la métrica')
+#     plt.ylim(0, 1.5)
 
-    # Graficar cada métrica con longitud distinta a 7
-    for name, valores in metricas2.items():
-        if len(valores) == numero:  # Verificar si la longitud es igual a 7
-            plt.plot(range(len(valores)), valores, label=name,marker='o')
+#     # Graficar cada métrica con longitud distinta a 7
+#     for name, valores in metricas2.items():
+#         if len(valores) == numero:  # Verificar si la longitud es igual a 7
+#             plt.plot(range(len(valores)), valores, label=name,marker='o')
 
-    # Agregar leyenda y mostrar gráfico
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.grid(True)
+#     # Agregar leyenda y mostrar gráfico
+#     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+#     plt.grid(True)
 
-    # Establecer valores y etiquetas en el eje y con todos los decimales
-    plt.yticks([i / 10 for i in range(15)])
+#     # Establecer valores y etiquetas en el eje y con todos los decimales
+#     plt.yticks([i / 10 for i in range(15)])
 
-    # Agregar fecha y hora al pie de la gráfica
-    plt.figtext(0.99, 0.01, fecha_hora, ha='right', va='bottom')
-    ruta =GenerarDirectorio('Graficos')
-       # Ajustar el tamaño de la gráfica dentro de la ventana
-     # Guardar el gráfico en la ubicación especificada con mayor resolución
-    plt.tight_layout()
+#     # Agregar fecha y hora al pie de la gráfica
+#     plt.figtext(0.99, 0.01, fecha_hora, ha='right', va='bottom')
+#     ruta =GenerarDirectorio('Graficos')
+#        # Ajustar el tamaño de la gráfica dentro de la ventana
+#      # Guardar el gráfico en la ubicación especificada con mayor resolución
+#     plt.tight_layout()
 
-    plt.savefig(os.path.join(ruta, f'{date_string}_grafico.png'), dpi=1800,bbox_inches='tight')
-def GenerarMatrizConfuncion(matriz_confusion):
-    # Configurar el gráfico y el tamaño de la figura
-    plt.figure(figsize=(10, 8))  # Ajusta el tamaño de la figura según tus necesidades
-    plt.imshow(matriz_confusion, cmap='Blues', interpolation='nearest')
-    plt.title('Matriz de Confusión')
-    plt.colorbar()
+#     plt.savefig(os.path.join(ruta, f'{date_string}_grafico.png'), dpi=1800,bbox_inches='tight')
+# def GenerarMatrizConfuncion(matriz_confusion):
+#     # Configurar el gráfico y el tamaño de la figura
+#     plt.figure(figsize=(10, 8))  # Ajusta el tamaño de la figura según tus necesidades
+#     plt.imshow(matriz_confusion, cmap='Blues', interpolation='nearest')
+#     plt.title('Matriz de Confusión')
+#     plt.colorbar()
 
-    # Etiquetas de los ejes x e y
-    etiquetas = ['Negativo', 'Positivo']
-    tick_marks = np.arange(len(etiquetas))
-    plt.xticks(tick_marks, etiquetas)
-    plt.yticks(tick_marks, etiquetas)
+#     # Etiquetas de los ejes x e y
+#     etiquetas = ['Negativo', 'Positivo']
+#     tick_marks = np.arange(len(etiquetas))
+#     plt.xticks(tick_marks, etiquetas)
+#     plt.yticks(tick_marks, etiquetas)
 
-    # Mostrar los valores de la matriz de confusión en cada celda
-    thresh = matriz_confusion.max() / 2.
-    for i, j in np.ndindex(matriz_confusion.shape):
-        plt.text(j, i, format(matriz_confusion[i, j], 'd'),
-                 horizontalalignment="center",
-                 color="white" if matriz_confusion[i, j] > thresh else "black")
+#     # Mostrar los valores de la matriz de confusión en cada celda
+#     thresh = matriz_confusion.max() / 2.
+#     for i, j in np.ndindex(matriz_confusion.shape):
+#         plt.text(j, i, format(matriz_confusion[i, j], 'd'),
+#                  horizontalalignment="center",
+#                  color="white" if matriz_confusion[i, j] > thresh else "black")
 
-    # Calcular valores de interés
-    true_negative = matriz_confusion[0, 0]
-    false_positive = matriz_confusion[0, 1]
-    false_negative = matriz_confusion[1, 0]
-    true_positive = matriz_confusion[1, 1]
+#     # Calcular valores de interés
+#     true_negative = matriz_confusion[0, 0]
+#     false_positive = matriz_confusion[0, 1]
+#     false_negative = matriz_confusion[1, 0]
+#     true_positive = matriz_confusion[1, 1]
 
-    # Calcular la suma total de todas las predicciones
-    total_predicciones = np.sum(matriz_confusion)
+#     # Calcular la suma total de todas las predicciones
+#     total_predicciones = np.sum(matriz_confusion)
 
-    # Calcular la suma total de las predicciones positivas y negativas
-    total_positivos = np.sum(matriz_confusion, axis=0)[1]
-    total_negativos = np.sum(matriz_confusion, axis=0)[0]
+#     # Calcular la suma total de las predicciones positivas y negativas
+#     total_positivos = np.sum(matriz_confusion, axis=0)[1]
+#     total_negativos = np.sum(matriz_confusion, axis=0)[0]
 
-    # Anotar los detalles de los valores de interés en el gráfico
-    plt.annotate(f'True Negatives: {true_negative} ({(true_negative/total_negativos)*100:.2f}%)', xy=(0, 0.1), xytext=(-1.5, 0.1),
-                 color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
-    plt.annotate(f'False Positives: {false_positive} ({(false_positive/total_negativos)*100:.2f}%)', xy=(1, 0.1), xytext=(2, 0.1),
-                 color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
-    plt.annotate(f'False Negatives: {false_negative} ({(false_negative/total_positivos)*100:.2f}%)', xy=(0, 1.1), xytext=(-1.5, 1.1),
-                 color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
-    plt.annotate(f'True Positives: {true_positive} ({(true_positive/total_positivos)*100:.2f}%)', xy=(1, 1.1), xytext=(2, 1.1),
-                 color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
+#     # Anotar los detalles de los valores de interés en el gráfico
+#     plt.annotate(f'True Negatives: {true_negative} ({(true_negative/total_negativos)*100:.2f}%)', xy=(0, 0.1), xytext=(-1.5, 0.1),
+#                  color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
+#     plt.annotate(f'False Positives: {false_positive} ({(false_positive/total_negativos)*100:.2f}%)', xy=(1, 0.1), xytext=(2, 0.1),
+#                  color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
+#     plt.annotate(f'False Negatives: {false_negative} ({(false_negative/total_positivos)*100:.2f}%)', xy=(0, 1.1), xytext=(-1.5, 1.1),
+#                  color='red', fontsize=10, arrowprops=dict(facecolor='red', arrowstyle="->"), verticalalignment='center')
+#     plt.annotate(f'True Positives: {true_positive} ({(true_positive/total_positivos)*100:.2f}%)', xy=(1, 1.1), xytext=(2, 1.1),
+#                  color='blue', fontsize=10, arrowprops=dict(facecolor='blue', arrowstyle="->"), verticalalignment='center')
 
-    # Obtener la fecha actual
-    import datetime
-    date_string = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+#     # Obtener la fecha actual
+#     import datetime
+#     date_string = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
-    # Generar un directorio para guardar los gráficos
-    import os
+#     # Generar un directorio para guardar los gráficos
+#     import os
  
-    # Ajustar los márgenes del gráfico
-    plt.tight_layout()
+#     # Ajustar los márgenes del gráfico
+#     plt.tight_layout()
 
-    # Guardar el gráfico en un archivo con mayor resolución (dpi)
-    plt.savefig(PATH_grafico_Matrix, dpi=1800, bbox_inches='tight')  # Aumenta el dpi según tus necesidades
+#     # Guardar el gráfico en un archivo con mayor resolución (dpi)
+#     plt.savefig(PATH_grafico_Matrix, dpi=1800, bbox_inches='tight')  # Aumenta el dpi según tus necesidades
 
-    # Mostrar el gráfico
-    plt.show()
+#     # Mostrar el gráfico
+#     plt.show()
 
 # # Ejemplo de uso con una matriz de confusión (por ejemplo)
 # matriz_confusion_ejemplo = np.array([[32, 249], [91, 2131]])
