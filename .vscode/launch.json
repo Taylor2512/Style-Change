@@ -7,17 +7,17 @@
         
         {
              "args": [
-                 "--input",
-                "release", 
-                "--output", 
-                "release",
+                //  "--input",
+                // "release", 
+                // "--output", 
+                // "release",
                 "--modelType",
                 "mdeberta"
             ],
             "name": "Python: archivo actual",
             "type": "python",
             "request": "launch",
-            "program": "Prueba.py",
+            "program": "src/Prueba.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
