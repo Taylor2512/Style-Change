@@ -110,29 +110,18 @@ def main():
     global model,PATH_grafico_Matrix, tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
     now = datetime.datetime.now()
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
-    # if args.modelType=='mdeberta':
-    #     tokenizer = AutoTokenizer.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"))
-    #     config = AutoConfig.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"),output_hidden_states=True, output_attentions=True)
-    #     MODEL = AutoModel.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"), config=config)
-    #     MODEL_TYPE=args.modelType
-    #     logging.info("Modelo usado",args.modelType)
-    # elif args.modelType=='deberta':
-    #     tokenizer = DebertaTokenizer.from_pretrained(os.path.join(rutabase,"models/deberta-base"))
-    #     config = DebertaConfig.from_pretrained(os.path.join(rutabase,"models/deberta-base"), output_hidden_states=True, output_attentions=True)
-    #     MODEL = DebertaModel.from_pretrained(os.path.join(rutabase,"models/deberta-base"), config=config)
-    #     MODEL_TYPE=args.modelType
     if args.modelType=='mdeberta':
-       tokenizer = AutoTokenizer.from_pretrained("microsoft/mdeberta-v3-base")
-       config = AutoConfig.from_pretrained("microsoft/mdeberta-v3-base",output_hidden_states=True, output_attentions=True)
-       MODEL = AutoModel.from_pretrained("microsoft/mdeberta-v3-base", config=config)
-       MODEL_TYPE=args.modelType
-       logging.info("Modelo usado",args.modelType)
+        tokenizer = AutoTokenizer.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"))
+        config = AutoConfig.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"),output_hidden_states=True, output_attentions=True)
+        MODEL = AutoModel.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"), config=config)
+        MODEL_TYPE=args.modelType
+        logging.info("Modelo usado",args.modelType)
     elif args.modelType=='deberta':
-       tokenizer = DebertaTokenizer.from_pretrained("microsoft/deberta-base")
-       config = DebertaConfig.from_pretrained("microsoft/deberta-base", output_hidden_states=True, output_attentions=True)
-       MODEL = DebertaModel.from_pretrained("microsoft/deberta-base", config=config)
-       MODEL_TYPE=args.modelType
-       logging.info("Modelo usado",args.modelType)
+        tokenizer = DebertaTokenizer.from_pretrained(os.path.join(rutabase,"models/deberta-base"))
+        config = DebertaConfig.from_pretrained(os.path.join(rutabase,"models/deberta-base"), output_hidden_states=True, output_attentions=True)
+        MODEL = DebertaModel.from_pretrained(os.path.join(rutabase,"models/deberta-base"), config=config)
+        MODEL_TYPE=args.modelType
+        logging.info("Modelo usado",args.modelType)
 
     PATH_historial_optuna = os.path.join(GenerarDirectorio(os.path.join("salidas",MODEL_TYPE, f"{MODEL_TYPE}historial_optuna")), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
     PATH_modelo = os.path.join(GenerarDirectorio(os.path.join("models",MODEL_TYPE+"-base-finetuned")), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
