@@ -144,14 +144,14 @@ def main():
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
         SaveDataSet(args, carpeta)
-        # GenerarModelo(args, carpeta)
-        # print("Modelo generado")
-        # logging.info("--------- MODELO GENERADO ---------")
+        GenerarModelo(args, carpeta)
+        print("Modelo generado")
+        logging.info("--------- MODELO GENERADO ---------")
 
-        # logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
-        # GenerarSolucion(args, carpeta)
-        # print("solucion generada")
-        # logging.info("--------- SOLUCION FINALIZADA ---------")
+        logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
+        GenerarSolucion(args, carpeta)
+        print("solucion generada")
+        logging.info("--------- SOLUCION FINALIZADA ---------")
 
     else:
         RecorrerDataset(args)
@@ -257,7 +257,8 @@ def GenerarSolucion(argss, carpeta):
         json.dump(resultados_preds, archivo)
 
     matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])
-    print("matriz Confunzion",matriz_confusion)
+    logging.info("matriz Confunzion",matriz_confusion)
+ 
     # GenerarMatrizConfuncion(matriz_confusion)
 
 def SaveDataSet(args, carpeta):
