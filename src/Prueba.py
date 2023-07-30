@@ -322,8 +322,8 @@ def GenerarModelo(argss, carpeta):
     elif argss.modelType=='deberta':
         dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
         dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','ebertaTokenizer.json'))
-    dataTrainer=   dataTrainer.iloc[:5,:]
-    dataEvaluation=   dataEvaluation.iloc[:5,:]
+    # dataTrainer=   dataTrainer.iloc[:5,:]
+    # dataEvaluation=   dataEvaluation.iloc[:5,:]
 
     # Dataset de entrenamiento y evaluación que se utilizará para el entrenamiento del modelo
     train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
