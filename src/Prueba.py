@@ -32,7 +32,7 @@ import time
 
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-PATH_carpeta = "/mnt/beegfs/cher0001/AuTexTification/salidas/deBERTaP3/"
+PATH_carpeta = "/mnt/beegfs/cher0001/pan23change/salidas/deBERTa/"
 ModelPathbase=None
 # Definir las variables globales MODEL y MODEL_TYPE
 MODEL = None
@@ -76,9 +76,8 @@ MAX_EPOCHS = 5
 OPTUNA_EARLY_STOPING = 10# poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 #Batchs
-BATCHS_options = [8,16,64]
-# rutabase = "/mnt/beegfs/cher0001/pan23change"
-rutabase = ""
+BATCHS_options = [8,16]
+rutabase = "/mnt/beegfs/cher0001/pan23change"
 
 def GenerarDirectorio(name):
     directorio = os.path.join(rutabase, name)
@@ -115,13 +114,13 @@ def main():
         config = AutoConfig.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"),output_hidden_states=True, output_attentions=True)
         MODEL = AutoModel.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"), config=config)
         MODEL_TYPE=args.modelType
-        logging.info("Modelo usado",args.modelType)
+        logging.info("Modelo usado %s",args.modelType)
     elif args.modelType=='deberta':
         tokenizer = DebertaTokenizer.from_pretrained(os.path.join(rutabase,"models/deberta-base"))
         config = DebertaConfig.from_pretrained(os.path.join(rutabase,"models/deberta-base"), output_hidden_states=True, output_attentions=True)
         MODEL = DebertaModel.from_pretrained(os.path.join(rutabase,"models/deberta-base"), config=config)
         MODEL_TYPE=args.modelType
-        logging.info("Modelo usado",args.modelType)
+        logging.info("Modelo usado %s",args.modelType)
 
     PATH_historial_optuna = os.path.join(GenerarDirectorio(os.path.join("salidas",MODEL_TYPE, f"{MODEL_TYPE}historial_optuna")), f"{MODEL_TYPE}EN-historial_optuna-rango.csv")
     PATH_modelo = os.path.join(GenerarDirectorio(os.path.join("models",MODEL_TYPE+"-base-finetuned")), f"{MODEL_TYPE}EN-ModeloEntrenadoOptuna-rango.pt")
@@ -257,9 +256,13 @@ def GenerarSolucion(argss, carpeta):
         json.dump(resultados_preds, archivo)
 
     matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])
-    logging.info("matriz Confunzion",matriz_confusion)
- 
+    print("matriz Confunzion",matriz_confusion)
     # GenerarMatrizConfuncion(matriz_confusion)
+    predict_testss = pd.DataFrame(predict_grouped)
+
+    predict_testss.to_json( GenerarDirectorio( os.path.join('salidas/{MODEL_TYPE}/prediccion', '{MODEL_TYPE}predict.json')), orient='records')
+
+    logging.info("matriz Confunzion",matriz_confusion)
 
 def SaveDataSet(args, carpeta):
     folder= args.input
