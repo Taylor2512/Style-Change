@@ -66,3 +66,13 @@
 2023-10-13 23:54:30,923 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
 2023-10-13 23:54:31,901 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
 2023-10-13 23:54:32,214 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-14 00:40:34,383 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-14 00:40:36,364 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-14 00:40:36,926 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-14 00:43:10,131 - INFO - --------- GENERAR EL MODELO deberta ------------
+2023-10-14 00:43:10,131 - INFO - ---- FUNCION GENERAR EL MODELO ----
+2023-10-14 00:43:27,236 - INFO - ----- DATASET -----
+2023-10-14 00:43:27,266 - INFO - Optuna con ejecucion con early stop: 
+2023-10-14 01:04:38,776 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-14 01:04:40,370 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-14 01:04:40,951 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0

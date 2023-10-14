@@ -144,12 +144,12 @@ def main():
     datatainer=None;
     datatavalid=None;
     
-    trainerjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/training.json"
-    validationjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/validation_data.json"
+    trainerjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
+    validationjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
   # Cargar los datos JSON en DataFrames
     try:
-        datatainer = pd.read_json(trainerjson, lines=True)
-        datatavalid = pd.read_json(validationjson, lines=True)
+        datatainer = pd.read_json(trainerjson+'training.json', lines=True)
+        datatavalid = pd.read_json(validationjson+'validation_data.json', lines=True)
         datatainer.rename(columns={'label': 'same'}, inplace=True)
         datatavalid.rename(columns={'label': 'same'}, inplace=True)
  
@@ -159,12 +159,13 @@ def main():
     datatainer['text_vec'] = datatainer.apply(lambda r: vectorize_text(r['text'], 512), axis=1)   
     datatavalid['text_vec'] = datatainer.apply(lambda r: vectorize_text(r['text'], 512), axis=1)   
 
-   
+    datatainer.to_json(os.path.join(trainerjson, f'training{MODEL_TYPE}.json'), orient='records')
+    datatavalid.to_json(os.path.join(trainerjson, f'validation{MODEL_TYPE}.json'), orient='records')
+
      # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
-         # GenerarModelo(args, carpeta)
+        GenerarModelo(args, trainerjson)
         # print("Modelo generado")
         # logging.info("--------- MODELO GENERADO ---------")
 
@@ -190,7 +191,7 @@ def GenerarSolucion(argss, carpeta):
     datatest=None
     train= os.path.join(argss.input, carpeta)
     if argss.modelType=='mdeberta':
-        datatest = pd.read_json(os.path.join(train,carpeta+'-test','mdebertaTokenizer.json'))
+        datatest = pd.read_json(os.path.join(train,carpeta))
         # Leer el contenido del archivo JSON como una cadena
         with open(PATH_parametros, 'r') as file:
             json_data = file.read()
@@ -280,13 +281,13 @@ def GenerarModelo(argss, carpeta):
     # Lee el Dataset de entrenamiento y evaluación
     train= os.path.join(argss.input, carpeta)
     if argss.modelType=='mdeberta':
-        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','mdebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','mdebertaTokenizer.json'))
+        dataTrainer = pd.read_json(os.path.join(carpeta,f'training{MODEL_TYPE}.json' ))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta,f'validation{MODEL_TYPE}.json'))
     elif argss.modelType=='deberta':
-        dataTrainer = pd.read_json(os.path.join(train,carpeta+'-train','ebertaTokenizer.json'))
-        dataEvaluation = pd.read_json(os.path.join(train,carpeta+'-validation','ebertaTokenizer.json'))
-    # dataTrainer=   dataTrainer.iloc[:5,:]
-    # dataEvaluation=   dataEvaluation.iloc[:5,:]
+        dataTrainer = pd.read_json(os.path.join(carpeta,f'training{MODEL_TYPE}.json' ))
+        dataEvaluation = pd.read_json(os.path.join(train,carpeta,f'validation{MODEL_TYPE}.json'))
+    dataTrainer=   dataTrainer.iloc[:5,:]
+    dataEvaluation=   dataEvaluation.iloc[:5,:]
 
     # Dataset de entrenamiento y evaluación que se utilizará para el entrenamiento del modelo
     train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)        
