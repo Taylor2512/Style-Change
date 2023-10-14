@@ -51,7 +51,8 @@ PATH_grafico_optuna_param = None
 PATH_result_train = None
 PATH_result_eval = None
 PATH_result_predict = None
- 
+datatavalid=None
+datatainer=None
 
 logs = []
 #----------------------------------------------------------------------------------------------------
@@ -107,20 +108,10 @@ def main():
     parser.add_argument("--modelType",type=str,default="deberta",help="type model to use",required=False,choices=model_types)
     parser.add_argument("--instancesDataset",type=str,default=1,help="type model to use",required=False,choices=instancesDataset)
     args = parser.parse_args()
-    global model,PATH_grafico_Matrix, tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
+    global datatavalid,datatainer, model,PATH_grafico_Matrix, tokenizer, config, MODEL,MODEL_TYPE,date_string,PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds,PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param,PATH_result_train, PATH_result_eval, PATH_result_predict
     now = datetime.datetime.now()
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
-    # if args.modelType=='mdeberta':
-    #     tokenizer = AutoTokenizer.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"))
-    #     config = AutoConfig.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"),output_hidden_states=True, output_attentions=True)
-    #     MODEL = AutoModel.from_pretrained(os.path.join(rutabase,"models/mdeberta-v3-base"), config=config)
-    #     MODEL_TYPE=args.modelType
-    #     logging.info("Modelo usado",args.modelType)
-    # elif args.modelType=='deberta':
-    #     tokenizer = DebertaTokenizer.from_pretrained(os.path.join(rutabase,"models/deberta-base"))
-    #     config = DebertaConfig.from_pretrained(os.path.join(rutabase,"models/deberta-base"), output_hidden_states=True, output_attentions=True)
-    #     MODEL = DebertaModel.from_pretrained(os.path.join(rutabase,"models/deberta-base"), config=config)
-    #     MODEL_TYPE=args.modelType
+ 
     if args.modelType=='mdeberta':
        tokenizer = AutoTokenizer.from_pretrained("microsoft/mdeberta-v3-base")
        config = AutoConfig.from_pretrained("microsoft/mdeberta-v3-base",output_hidden_states=True, output_attentions=True)
@@ -159,25 +150,21 @@ def main():
     try:
         datatainer = pd.read_json(trainerjson, lines=True)
         datatavalid = pd.read_json(validationjson, lines=True)
-        
-        # Ahora puedes trabajar con los DataFrames datatainer y datatavalid
-        # Por ejemplo, puedes imprimir las primeras filas de cada DataFrame:
-        print("Primeras filas del DataFrame de entrenamiento:")
-        print(datatainer.head())
-        
-        print("\nPrimeras filas del DataFrame de validación:")
-        print(datatavalid.head())
-        
+        datatainer.rename(columns={'label': 'same'}, inplace=True)
+        datatavalid.rename(columns={'label': 'same'}, inplace=True)
+ 
     except ValueError as e:
         print(f"Error al cargar el archivo JSON: {e}")
- 
+    
+    datatainer['text_vec'] = datatainer.apply(lambda r: vectorize_text(r['text'], 512), axis=1)   
+    datatavalid['text_vec'] = datatainer.apply(lambda r: vectorize_text(r['text'], 512), axis=1)   
+
    
      # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
-        SaveDataSet(args, carpeta)
-        # GenerarModelo(args, carpeta)
+         # GenerarModelo(args, carpeta)
         # print("Modelo generado")
         # logging.info("--------- MODELO GENERADO ---------")
 
@@ -186,26 +173,12 @@ def main():
         # print("solucion generada")
         # logging.info("--------- SOLUCION FINALIZADA ---------")
 
-    else:
-        RecorrerDataset(args)
-    
+   
 def cargar_json(file_path):
     with open(file_path, 'r') as filejson:
               data = json.load(filejson)
     return data
-     
-def RecorrerDataset(args):
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        SaveDataSet(args, carpeta)
-
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        GenerarModelo(args, carpeta)
-
-    for i in range(1, 4):
-        carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
-        GenerarSolucion(args, carpeta)
+ 
 
 def GenerarSolucion(argss, carpeta):
     logging.info("----- FUNCION GENERAR SOL DEL MODELO -----")
@@ -297,16 +270,7 @@ def GenerarSolucion(argss, carpeta):
     matriz_confusion = confusion_matrix(predict_grouped['labels'],predict_grouped['predict'])
     print("matriz Confunzion",matriz_confusion)
     # GenerarMatrizConfuncion(matriz_confusion)
-
-def SaveDataSet(args, carpeta):
-    folder= args.input
-    folderComplete = os.path.join(folder, carpeta, carpeta+'-train')
-    if os.path.exists(folderComplete):
-        SaveValidationOrTrain(folderComplete,args)
-    folderComplete = os.path.join(folder, carpeta, carpeta+'-validation')
-    if os.path.exists(folderComplete):
-        SaveValidationOrTrain(folderComplete,args)
-
+ 
 def GenerarModelo(argss, carpeta):
     logging.info("---- FUNCION GENERAR EL MODELO ----")
     print("Generar Modelo")
@@ -519,21 +483,17 @@ def remove_html_tags(text):
     soup = BeautifulSoup(text, "html.parser")
     stripped_text = soup.get_text()
     return stripped_text
-def vectorize_text(s0, s1, max_length):
+def vectorize_text(s0, max_length):
     # Unicode normalization
     s0=remove_html_tags(s0)
-    s1=remove_html_tags(s1)
     s0 = ''.join(c for c in unicodedata.normalize('NFD', s0) if unicodedata.category(c) != 'Mn')  # elimina cualquier diacrítico o acento de la cadena s
-    s1 = ''.join(c for c in unicodedata.normalize('NFD', s1) if unicodedata.category(c) != 'Mn')  # elimina cualquier diacrítico o acento de la cadena s
     # Unicode normalization
     #s = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')  # elimina cualquier diacrítico o acento de la cadena s
     s0 = re.sub(r"[^a-zA-Záéíóú.,!?;:<>()$€\[\]]+", r" ", s0)   # reemplaza todas las coincidencias del patrón con un espacio
-    s1 = re.sub(r"[^a-zA-Záéíóú.,!?;:<>()$€\[\]]+", r" ", s1)   # reemplaza todas las coincidencias del patrón con un espacio
-
+ 
     #'''convierte la entrada de texto sin formato en un formato numérico que se puede introducir en un modelo de aprendizaje automático'''
     input_ids = tokenizer.encode(   # utiliza el tokenizador previamente entrenado
       ''.join(s0),
-      ''.join(s1),                       # para codificar una cadena "s0" en sus identificadores de token correspondientes
       add_special_tokens=True,      # especifica si se agregan tokens especiales al principio y al final de la secuencia de tokens
       max_length=max_length,        # especifica la longitud máxima de la secuencia de tokens resultante
       #padding='longest',            # especifica cómo rellenar secuencias más cortas a la misma longitud que la secuencia más larga.
@@ -673,48 +633,7 @@ def GetProblemsFileTxtAndJson(input_folder: str, problem_id: str) -> TextoConPar
             return texto_con_parrafos
         else:
             return None
-def SaveValidationOrTrain(folder,args):
-    problem_ids = get_problem_ids(folder)
-
-    Lista: List[TextoConParrafos] = []
-    for problem_id in problem_ids:
-        textos = TextoConParrafos()
-        textos = GetProblemsFileTxtAndJson(folder, problem_id)
-        Lista.append(textos)
-    # Obtener el número de elementos a tomar
-    num_instances = int(len(Lista) * 0.8)
-    # Copiar la lista original para preservar su orden
-    copia_lista = Lista.copy()
-    # Tomar el 80% de los elementos en una nueva lista
-    lista_80porciento = random.sample(copia_lista, num_instances)
-    # Eliminar los elementos seleccionados de la copia de la lista original
-    for elemento in lista_80porciento:
-        copia_lista.remove(elemento)
-    # Los elementos restantes corresponden al 20% restante
-    lista_20porciento = copia_lista
-    if "train" in os.path.basename(folder):
-        SaveDatasetComplete(folder, args, lista_80porciento)
-
-        SaveDatasetComplete(folder.replace('train','test'), args, lista_20porciento)
-    else:
-        SaveDatasetComplete(folder, args, Lista)
-
-def SaveDatasetComplete(folder, args, Lista):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    if args.modelType=='mdeberta':
-       data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
-       datatrain = pd.DataFrame(data)
-       texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
-       datatrain.to_json(os.path.join(folder, 'mdebertaTokenizer.json'), orient='records')
-       texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
-    elif args.modelType=='deberta':
-       data = [{'id': o.id,'pair': pair, 'same': same,'text_vec':vectorize_text(pair[0],pair[1],512)} for o in Lista for pair, same in zip(o.nuevoparrafos, o.changes)]
-       datatrain = pd.DataFrame(data)
-       datatrain.to_json(os.path.join(folder, 'ebertaTokenizer.json'), orient='records')
-       texts = pd.DataFrame([{'id': o.id, 'textos': o.texto,'same':o.changes,'authors':o.authors,'totalParrafo':o.totalParrafos, 'parrafos':o.parrafos,'nuevoParrafo':o.nuevoparrafos} for o in Lista])
-       texts.to_json(os.path.join(folder, 'textosproblem.json'), orient='records')
-# Definir bien los argumentos
+ 
 arguments = TrainingArguments(
     output_dir=os.path.join(rutabase, 'output'),  # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
     evaluation_strategy='epoch',  # Evaluación del modelo al final de cada época

@@ -54,3 +54,15 @@
 2023-10-11 00:25:08,981 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
 2023-10-11 00:25:10,174 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
 2023-10-11 00:25:10,598 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-13 23:32:28,388 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-13 23:32:30,611 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-13 23:32:31,675 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-13 23:50:09,364 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-13 23:50:10,390 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-13 23:50:10,799 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-13 23:50:40,132 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-13 23:50:40,697 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-13 23:50:41,012 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
+2023-10-13 23:54:30,923 - DEBUG - Starting new HTTPS connection (1): huggingface.co:443
+2023-10-13 23:54:31,901 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/vocab.json HTTP/1.1" 200 0
+2023-10-13 23:54:32,214 - DEBUG - https://huggingface.co:443 "HEAD /microsoft/deberta-base/resolve/main/config.json HTTP/1.1" 200 0
