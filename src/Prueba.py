@@ -86,7 +86,7 @@ MAX_EPOCHS = 5
 OPTUNA_EARLY_STOPING = 10  # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 # Batchs
-BATCHS_options = [8, 16, 64]
+BATCHS_options = [4]
 # rutabase = "/mnt/beegfs/cher0001/pan23change"
 rutabase = "C:/CODIGO/Style-Change"
 
@@ -246,65 +246,62 @@ def main():
     )
     model = MODEL
 
-    datatainer=None
-    datatavalid=None
+    datatainer = None
+    datatavalid = None
     # Rutas de los archivos JSON
     trainerjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
     validationjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
     ruta_archivo_datatainer = os.path.join(trainerjson, f"training{MODEL_TYPE}.json")
     ruta_archivo_datatavalid = os.path.join(trainerjson, f"validation{MODEL_TYPE}.json")
-    
+
     # # Cargar los datos desde JSON
     # datatainer = Humanbot.cargar_desde_json(os.path.join(trainerjson, "training.json"))
     # datatavalid = Humanbot.cargar_desde_json(os.path.join(trainerjson, "validation_data.json"))
     # validouput= cargar_json(os.path.join(trainerjson, "validation_sample_output.json"))
-    
+
     # # Iterar a través de los objetos en "datatavalid"
     # for objeto_datatavalid in datatavalid:
     #     # Obtener el "id" del objeto en "datatavalid"
     #     id_datatavalid = objeto_datatavalid.id
-    
+
     #     # Buscar un objeto en "validouput" con el mismo "id"
     #     objeto_validouput = next((item for item in validouput if item['id'] == id_datatavalid), None)
-    
+
     #     # Si se encontró un objeto en "validouput" con el mismo "id", asignar el valor de "label" a "same"
     #     if objeto_validouput is not None:
     #         objeto_datatavalid.same = objeto_validouput['label']
     # # Define una función lambda para aplicar vectorize_text a cada objeto y configurar text_vect
     # vectorize_and_set_text_vect = lambda objeto: setattr(objeto, 'text_vec', vectorize_text(objeto.text, 512)) if objeto is not None else None
-    
+
     # # Filtrar la lista datatainer para eliminar valores None
     # datatainer = [objeto for objeto in datatainer if objeto is not None]
-    
+
     # # Aplica la función lambda a cada objeto en datatainer
     # list(map(vectorize_and_set_text_vect, datatainer))
     # list(map(vectorize_and_set_text_vect, datatavalid))
-    
+
     # # Convertir las matrices NumPy a listas antes de guardar
     # for obj in datatainer:
     #     if obj.text_vec is not None:
     #         obj.text_vec = obj.text_vec.tolist()
 
-    
     # for obj in datatavalid:
     #     if obj.text_vec is not None:
-    #         obj.text_vec = obj.text_vec.tolist() 
-    
+    #         obj.text_vec = obj.text_vec.tolist()
+
     # # Definir función personalizada para serializar objetos
     # def custom_json_serializer(obj):
     #     if isinstance(obj, np.ndarray):
     #         return obj.tolist()
     #     elif obj is not None:
-    #         return {key.lstrip('_'): value for key, value in obj.__dict__.items()}     
+    #         return {key.lstrip('_'): value for key, value in obj.__dict__.items()}
     # # Guardar datatainer en JSON
     # with open(ruta_archivo_datatainer, "w") as archivo_json:
-    #     json.dump(datatainer, archivo_json, default=custom_json_serializer, indent=4)     
+    #     json.dump(datatainer, archivo_json, default=custom_json_serializer, indent=4)
     # # Guardar datatavalid en JSON
     # with open(ruta_archivo_datatavalid, "w") as archivo_json:
     #     json.dump(datatavalid, archivo_json, default=custom_json_serializer, indent=4)
     #     # Cargar los datos JSON en DataFrames
-  
-    
 
     # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
@@ -329,6 +326,7 @@ def cargar_json(file_path):
             except json.JSONDecodeError:
                 pass  # Ignorar líneas que no sean objetos JSON válidos
     return data
+
 
 def GenerarSolucion(argss, carpeta):
     logging.info("----- FUNCION GENERAR SOL DEL MODELO -----")
@@ -734,7 +732,9 @@ class Humanbot:
 
     @text.setter
     def text(self, value):
-        self._text = value  # Cambio: Debe asignar el valor a _text en lugar de self.text
+        self._text = (
+            value  # Cambio: Debe asignar el valor a _text en lugar de self.text
+        )
 
     @property
     def same(self):
@@ -753,13 +753,20 @@ class Humanbot:
                 try:
                     item = json.loads(linea)
                     bot = Humanbot()
-                    bot.id = item.get("id", None)  # Cambio: No es necesario usar una tupla
-                    bot.text = item.get("text", None)  # Cambio: No es necesario usar una tupla
-                    bot.same = item.get("label", None)  # Cambio: Usar "label" en lugar de "label"
+                    bot.id = item.get(
+                        "id", None
+                    )  # Cambio: No es necesario usar una tupla
+                    bot.text = item.get(
+                        "text", None
+                    )  # Cambio: No es necesario usar una tupla
+                    bot.same = item.get(
+                        "label", None
+                    )  # Cambio: Usar "label" en lugar de "label"
                     objetos.append(bot)
                 except json.JSONDecodeError:
                     pass  # Ignorar líneas que no sean objetos JSON válidos
         return objetos
+
 
 arguments = TrainingArguments(
     # Ruta del directorio de salida donde se guardarán los resultados del entrenamiento
@@ -917,38 +924,51 @@ def _getvalores(data, key):
 # GenerarMatrizConfuncion(matriz_confusion_ejemplo)
 
 
-class MyDataset(Dataset):
-    def __init__(self, dataframe):
-        self.len = len(dataframe)
-        self.data = dataframe
+class MyDataset(Dataset):  # define una nueva clase MyDataset que hereda de Dataset
+    def __init__(
+        self, dataframe
+    ):  # define el constructor  "__init__"  que toma un solo argumento dataframe
+        # print(dataframe)
+        self.len = len(
+            dataframe
+        )  # calcula la longitud de la entrada dataframe usando la funcion "len" y la almacena como una variable de instancia "self.len"
+        self.data = dataframe  # se asigna la entrada dataframe a una variable de instancia "self.data"
 
-    def __getitem__(self, index):
-        input_ids = torch.tensor(self.data.text_vec.iloc[index]).cpu()
-        mask = torch.ones(input_ids.shape, dtype=int)
-        pad_positions = input_ids == 0
-        mask[pad_positions] = 0
-        attention_mask = mask
+    def __getitem__(
+        self, index
+    ):  # define el método "__getitem__" que toma un solo argumento index
+        """el metodo __getitem__ devuelve un diccionario que contiene cuatro claves: 'input_ids', 'attention_mask', 'labels'y 'added_features'"""
 
-        # Validar si "same" existe en el diccionario text_vec
-        text_vec = self.data.text_vec.iloc[index]
-        if "same" in text_vec:
-            label = text_vec["same"]
-        else:
-            label = None
-
-        if label is not None:
-            targets = torch.tensor([1 - label, label])
-        else:
-            targets = None
-
+        input_ids = torch.tensor(
+            self.data.text_vec.iloc[index]
+        ).cpu()  # almacena las características de los datos de "text_vec" ​​que se han convertido en un vector de longitud fija.
+        # attention_mask = torch.ones([input_ids.size(0)]).cpu()  # attention_mask almacena los elementos de entrada que se debe prestar atención y cuáles se deben ignorar
+        #
+        mask = torch.ones(
+            input_ids.shape, dtype=int
+        )  # Crear un tensor con el mismo tamaño que input_ids lleno de unos:
+        pad_positions = (
+            input_ids == 0
+        )  # Identificar las posiciones en input_ids que contienen el token especial [PAD]
+        mask[
+            pad_positions
+        ] = 0  # Actualizar las posiciones correspondientes en mask a cero:
+        attention_mask = (
+            mask  # Actualizar las posiciones correspondientes en mask a cero:
+        )
+        #
+        label = self.data.same.iloc[
+            index
+        ]  # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
+        targets = torch.tensor([1 - label, label])  # ojo probar ESTO ES NUEVO
         return {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "labels": targets,
+            "input_ids": input_ids,  # devuelve las características de entrada para el punto de datos
+            "attention_mask": attention_mask,  # devuelve la máscara de atención para el punto de datos
+            "labels": targets,  # devuelve un valor escalar que representa la puntuación de complejidad
         }
 
     def __len__(self):
-        return self.len
+        return self.len  # devuelve la longitud del conjunto de datos personalizado
 
 
 class MyTrainer(Trainer):
