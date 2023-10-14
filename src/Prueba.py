@@ -78,7 +78,7 @@ OPTUNA_EARLY_STOPING = 10# poner 10 # Aqui se define el stop, si los resultados 
 #Batchs
 BATCHS_options = [8,16,64]
 # rutabase = "/mnt/beegfs/cher0001/pan23change"
-rutabase = ""
+rutabase = "C:/CODIGO/Style-Change"
 
 def GenerarDirectorio(name):
     directorio = os.path.join(rutabase, name)
@@ -149,8 +149,30 @@ def main():
     PATH_result_predict = os.path.join(GenerarDirectorio(os.path.join("salidas",MODEL_TYPE, f"{MODEL_TYPE}resultados")),f"{MODEL_TYPE}EN-resultados-predict-metricas.json")
     PATH_grafico_Matrix = os.path.join(GenerarDirectorio(os.path.join("salidas",MODEL_TYPE, f"{MODEL_TYPE}resultados")),f"{MODEL_TYPE}Grafico-Matrix-confunsion.png")
     model=MODEL 
-
-    # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
+    
+    datatainer=None;
+    datatavalid=None;
+    
+    trainerjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/training.json"
+    validationjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/validation_data.json"
+  # Cargar los datos JSON en DataFrames
+    try:
+        datatainer = pd.read_json(trainerjson, lines=True)
+        datatavalid = pd.read_json(validationjson, lines=True)
+        
+        # Ahora puedes trabajar con los DataFrames datatainer y datatavalid
+        # Por ejemplo, puedes imprimir las primeras filas de cada DataFrame:
+        print("Primeras filas del DataFrame de entrenamiento:")
+        print(datatainer.head())
+        
+        print("\nPrimeras filas del DataFrame de validación:")
+        print(datatavalid.head())
+        
+    except ValueError as e:
+        print(f"Error al cargar el archivo JSON: {e}")
+ 
+   
+     # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
         carpeta = 'pan23-multi-author-analysis-dataset' + str(args.instancesDataset)
@@ -166,7 +188,12 @@ def main():
 
     else:
         RecorrerDataset(args)
- 
+    
+def cargar_json(file_path):
+    with open(file_path, 'r') as filejson:
+              data = json.load(filejson)
+    return data
+     
 def RecorrerDataset(args):
     for i in range(1, 4):
         carpeta = 'pan23-multi-author-analysis-dataset' + str(i)
