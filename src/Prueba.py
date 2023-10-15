@@ -62,7 +62,7 @@ PATH_result_eval = None
 PATH_result_predict = None
 datatavalid = None
 datatainer = None
-
+datatatest=None
 logs = []
 # ----------------------------------------------------------------------------------------------------
 #                    Entrenamiento Optuna y objetivo
@@ -151,7 +151,7 @@ def main():
         choices=instancesDataset,
     )
     args = parser.parse_args()
-    global datatavalid, datatainer, model, PATH_grafico_Matrix, tokenizer, config, MODEL, MODEL_TYPE, date_string, PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds, PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param, PATH_result_train, PATH_result_eval, PATH_result_predict
+    global datatavalid, datatainer,datatatest, model, PATH_grafico_Matrix, tokenizer, config, MODEL, MODEL_TYPE, date_string, PATH_historial_optuna, PATH_modelo, PATH_parametros, PATH_resultados_preds, PATH_predicciones, PATH_imagen_matriz, PATH_grafico_optuna, PATH_grafico_optuna_param, PATH_result_train, PATH_result_eval, PATH_result_predict
     now = datetime.datetime.now()
     date_string = now.strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -248,70 +248,85 @@ def main():
 
     datatainer = None
     datatavalid = None
+    datatatest=None
     # Rutas de los archivos JSON
-    trainerjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
-    validationjson = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
-    ruta_archivo_datatainer = os.path.join(trainerjson, f"training{MODEL_TYPE}.json")
-    ruta_archivo_datatavalid = os.path.join(trainerjson, f"validation{MODEL_TYPE}.json")
+    rutadata = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
+    ruta_archivo_datatainer = os.path.join(rutadata, f"training{MODEL_TYPE}.json")
+    ruta_archivo_datatavalid = os.path.join(rutadata, f"validation{MODEL_TYPE}.json")
+    ruta_archivo_test = os.path.join(rutadata, f"test{MODEL_TYPE}.json")
 
-    # # Cargar los datos desde JSON
-    # datatainer = Humanbot.cargar_desde_json(os.path.join(trainerjson, "training.json"))
-    # datatavalid = Humanbot.cargar_desde_json(os.path.join(trainerjson, "validation_data.json"))
-    # validouput= cargar_json(os.path.join(trainerjson, "validation_sample_output.json"))
+    # Cargar los datos desde JSON
+    datatainer = Humanbot.cargar_desde_json(os.path.join(rutadata, "training.json"))
+    datatatest = Humanbot.cargar_desde_json(os.path.join(rutadata, "test.json"))
+    datatavalid = Humanbot.cargar_desde_json(os.path.join(rutadata, "validation_data.json"))
+    validouput= cargar_json(os.path.join(rutadata, "validation_sample_output.json"))
 
-    # # Iterar a través de los objetos en "datatavalid"
-    # for objeto_datatavalid in datatavalid:
-    #     # Obtener el "id" del objeto en "datatavalid"
-    #     id_datatavalid = objeto_datatavalid.id
+    # Iterar a través de los objetos en "datatavalid"
+    for objeto_datatavalid in datatavalid:
+        # Obtener el "id" del objeto en "datatavalid"
+        id_datatavalid = objeto_datatavalid.id
 
-    #     # Buscar un objeto en "validouput" con el mismo "id"
-    #     objeto_validouput = next((item for item in validouput if item['id'] == id_datatavalid), None)
+        # Buscar un objeto en "validouput" con el mismo "id"
+        objeto_validouput = next((item for item in validouput if item['id'] == id_datatavalid), None)
 
-    #     # Si se encontró un objeto en "validouput" con el mismo "id", asignar el valor de "label" a "same"
-    #     if objeto_validouput is not None:
-    #         objeto_datatavalid.same = objeto_validouput['label']
-    # # Define una función lambda para aplicar vectorize_text a cada objeto y configurar text_vect
-    # vectorize_and_set_text_vect = lambda objeto: setattr(objeto, 'text_vec', vectorize_text(objeto.text, 512)) if objeto is not None else None
+        # Si se encontró un objeto en "validouput" con el mismo "id", asignar el valor de "label" a "same"
+        if objeto_validouput is not None:
+            objeto_datatavalid.same = objeto_validouput['label']
+    # Define una función lambda para aplicar vectorize_text a cada objeto y configurar text_vect
+    vectorize_and_set_text_vect = lambda objeto: setattr(objeto, 'text_vec', vectorize_text(objeto.text, 512)) if objeto is not None else None
+    
+    # Filtrar la lista datatainer para eliminar valores None
+    datatainer = [objeto for objeto in datatainer if objeto is not None]
 
-    # # Filtrar la lista datatainer para eliminar valores None
-    # datatainer = [objeto for objeto in datatainer if objeto is not None]
+    # Aplica la función lambda a cada objeto en datatainer
+    list(map(vectorize_and_set_text_vect, datatainer))
+    list(map(vectorize_and_set_text_vect, datatavalid))
+    list(map(vectorize_and_set_text_vect, datatatest))
+    
 
-    # # Aplica la función lambda a cada objeto en datatainer
-    # list(map(vectorize_and_set_text_vect, datatainer))
-    # list(map(vectorize_and_set_text_vect, datatavalid))
+    # Convertir las matrices NumPy a listas antes de guardar
+    # The above code is iterating over each object in the "datatainer" and checking if the "text_vec"
+    # attribute of the object is not None. If it is not None, it converts the "text_vec" attribute
+    # from a numpy array to a list.
+    for obj in datatainer:
+        if obj.text_vec is not None:
+            obj.text_vec = obj.text_vec.tolist()
+    for obj in datatatest:
+        if obj.text_vec is not None:
+            obj.text_vec = obj.text_vec.tolist()
 
-    # # Convertir las matrices NumPy a listas antes de guardar
-    # for obj in datatainer:
-    #     if obj.text_vec is not None:
-    #         obj.text_vec = obj.text_vec.tolist()
+    for obj in datatavalid:
+        if obj.text_vec is not None:
+            obj.text_vec = obj.text_vec.tolist()
 
-    # for obj in datatavalid:
-    #     if obj.text_vec is not None:
-    #         obj.text_vec = obj.text_vec.tolist()
+    # Definir función personalizada para serializar objetos
+    def custom_json_serializer(obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif obj is not None:
+            return {key.lstrip('_'): value for key, value in obj.__dict__.items()}
+    # Guardar datatainer en JSON
+    with open(ruta_archivo_datatainer, "w") as archivo_json:
+        json.dump(datatainer, archivo_json, default=custom_json_serializer, indent=4)
+    # Guardar datatavalid en JSON
+    with open(ruta_archivo_datatavalid, "w") as archivo_json:
+        json.dump(datatavalid, archivo_json, default=custom_json_serializer, indent=4)
+        # Cargar los datos JSON en DataFrames
 
-    # # Definir función personalizada para serializar objetos
-    # def custom_json_serializer(obj):
-    #     if isinstance(obj, np.ndarray):
-    #         return obj.tolist()
-    #     elif obj is not None:
-    #         return {key.lstrip('_'): value for key, value in obj.__dict__.items()}
-    # # Guardar datatainer en JSON
-    # with open(ruta_archivo_datatainer, "w") as archivo_json:
-    #     json.dump(datatainer, archivo_json, default=custom_json_serializer, indent=4)
-    # # Guardar datatavalid en JSON
-    # with open(ruta_archivo_datatavalid, "w") as archivo_json:
-    #     json.dump(datatavalid, archivo_json, default=custom_json_serializer, indent=4)
-    #     # Cargar los datos JSON en DataFrames
+    # Guardar datatavalid en JSON
+    with open(ruta_archivo_test, "w") as archivo_json:
+        json.dump(datatatest, archivo_json, default=custom_json_serializer, indent=4)
+        # Cargar los datos JSON en DataFrames
 
     # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
-        GenerarModelo(args, trainerjson)
+        GenerarModelo(args, rutadata)
         # print("Modelo generado")
         # logging.info("--------- MODELO GENERADO ---------")
 
-        # logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
-        # GenerarSolucion(args, carpeta)
+        logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
+        GenerarSolucion(args, rutadata)
         # print("solucion generada")
         # logging.info("--------- SOLUCION FINALIZADA ---------")
 
@@ -334,23 +349,12 @@ def GenerarSolucion(argss, carpeta):
     # device = torch.device('cuda')
 
     print(" Generar Solucion")
-
+    predict_test []=None
     datatest = None
-    train = os.path.join(argss.input, carpeta)
-    if argss.modelType == "mdeberta":
-        datatest = pd.read_json(os.path.join(train, carpeta))
-        # Leer el contenido del archivo JSON como una cadena
-        with open(PATH_parametros, "r") as file:
-            json_data = file.read()
-        # Cargar el objeto JSON desde la cadena
-        lstm_dict = json.loads(json_data)
-    elif argss.modelType == "deberta":
-        datatest = pd.read_json(
-            os.path.join(train, carpeta + "-test", "ebertaTokenizer.json")
-        )
-        # Leer el contenido del archivo JSON como una cadena
-        with open(PATH_parametros, "r") as file:
-            json_data = file.read()
+    datatest = pd.read_json.path.join(carpeta, f"validation{MODEL_TYPE}.json")
+    # Leer el contenido del archivo JSON como una cadena
+    with open(PATH_parametros, "r") as file:
+        json_data = file.read()
         # Cargar el objeto JSON desde la cadena
         lstm_dict = json.loads(json_data)
 
@@ -370,43 +374,19 @@ def GenerarSolucion(argss, carpeta):
     # Agrupar los datos por el valor de "id"
     # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
     # Agrupar los datos por el valor de "id"
-    grouped_df = datatest.groupby("id")
-    # Crear una lista para almacenar los DataFrames agrupados
-    dataframes_list = []
-    # folder= argss.input
-    predict_test = []
+    mydata = MyDataset(df) 
+    dataloader = DataLoader(mydata, batch_size=len(df), shuffle=True)
+    for batch in dataloader:
+        input_ids = batch["input_ids"]
+        attention_mask = batch["attention_mask"]
+        labels = batch["labels"]
+        predicciones = modelo_cargado.predict(input_ids, attention_mask, labels)
+        labes2 = labels.argmax(dim=1)
+        data = {"predict": predicciones, "labels": labes2.tolist()}
+        # agregamos los datos en un array que continene el orden de las filas que vamos a predecir
+        predict_test.append(data)
 
-    logging.info("DF Agrupados: ", grouped_df)
-    # folderComplete = os.path.join(folder, carpeta, carpeta+'-solution')
-    # if not os.path.exists(folderComplete):
-    #     os.makedirs(folderComplete)
-    # Recorrer los grupos y crear un DataFrame agrupado por cada grupo
-    for group_id, group_data in grouped_df:
-        # Crear un nuevo DataFrame agrupado por ID
-        grouped_dataframe = pd.DataFrame(group_data)
-        # Agregar el DataFrame agrupado a la lista
-        dataframes_list.append(grouped_dataframe)
-
-    logging.info("Lista df agrupada: ", dataframes_list)
-    for index in range(len(dataframes_list)):
-        dataforinstans = dataframes_list[index]
-        mydata = MyDataset(dataforinstans)
-        instansc = dataforinstans["id"].iloc[0]
-        # Crear un DataLoader para recorrer el dataset
-        # Ajusta el tamaño del lote según tus necesidades
-        dataloader = DataLoader(mydata, batch_size=len(dataforinstans), shuffle=True)
-        # Recorrer el DataLoader
-        for batch in dataloader:
-            input_ids = batch["input_ids"]
-            attention_mask = batch["attention_mask"]
-            labels = batch["labels"]
-            predicciones = modelo_cargado.predict(input_ids, attention_mask, labels)
-            labes2 = labels.argmax(dim=1)
-            data = {"predict": predicciones, "labels": labes2.tolist()}
-            # agregamos los datos en un array que continene el orden de las filas que vamos a predecir
-            predict_test.append(data)
-
-            # Crear el DataFrame a partir de la lista de diccionarios
+        # Crear el DataFrame a partir de la lista de diccionarios
 
     predict_test = pd.DataFrame(predict_test)
     logging.info("Resultado predicciones: ", predict_test)
@@ -744,28 +724,39 @@ class Humanbot:
     def same(self, value):
         self._same = value
 
+    
     @classmethod
     def cargar_desde_json(cls, ruta_json):
         objetos = []
-        with open(ruta_json, "r") as archivo_json:
-            lineas = archivo_json.readlines()
-            for linea in lineas:
-                try:
-                    item = json.loads(linea)
-                    bot = Humanbot()
-                    bot.id = item.get(
-                        "id", None
-                    )  # Cambio: No es necesario usar una tupla
-                    bot.text = item.get(
-                        "text", None
-                    )  # Cambio: No es necesario usar una tupla
-                    bot.same = item.get(
-                        "label", None
-                    )  # Cambio: Usar "label" en lugar de "label"
-                    objetos.append(bot)
-                except json.JSONDecodeError:
-                    pass  # Ignorar líneas que no sean objetos JSON válidos
+        objeto_actual = None
+
+        with open(ruta_json, "r", encoding="utf-8") as archivo_json:
+            for linea in archivo_json:
+                if not objeto_actual:
+                    objeto_actual = linea
+                else:
+                    objeto_actual += linea
+
+                # Si encontramos un objeto JSON completo, lo procesamos
+                if objeto_actual.strip().endswith("}"):
+                    try:
+                        item = json.loads(objeto_actual)
+                        bot = Humanbot()
+                        bot.id = item.get("id", None)
+                        bot.text = item.get("text", None)
+                        bot.same = item.get("label", None)
+                        objetos.append(bot)
+                        objeto_actual = None
+                    except json.JSONDecodeError:
+                        # Si no podemos cargar el objeto JSON, continuamos con la siguiente línea
+                        objeto_actual = None
+
         return objetos
+
+
+
+
+
 
 
 arguments = TrainingArguments(
@@ -960,7 +951,10 @@ class MyDataset(Dataset):  # define una nueva clase MyDataset que hereda de Data
         label = self.data.same.iloc[
             index
         ]  # almacena un valor escalar que representa la etiqueta de salida para la puntuación de complejidad
-        targets = torch.tensor([1 - label, label])  # ojo probar ESTO ES NUEVO
+        if label is not None:
+            targets = torch.tensor([1 - label, label])  # ojo probar ESTO ES NUEVO
+        else:
+            targets = None
         return {
             "input_ids": input_ids,  # devuelve las características de entrada para el punto de datos
             "attention_mask": attention_mask,  # devuelve la máscara de atención para el punto de datos
