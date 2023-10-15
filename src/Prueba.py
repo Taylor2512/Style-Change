@@ -86,7 +86,7 @@ MAX_EPOCHS = 5
 OPTUNA_EARLY_STOPING = 10  # poner 10 # Aqui se define el stop, si los resultados de optuna siguen siendo iguales luego de 10 trials seguidos, entonces detener la optimización
 
 # Batchs
-BATCHS_options = [4]
+BATCHS_options = [16]
 # rutabase = "/mnt/beegfs/cher0001/pan23change"
 rutabase = "C:/CODIGO/Style-Change"
 
@@ -251,6 +251,18 @@ def main():
     datatatest=None
     # Rutas de los archivos JSON
     rutadata = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
+    # SaveDataset(rutadata)
+    # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
+    if args.instancesDataset is not None:
+        logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
+        # GenerarModelo(args, rutadata)
+        # print("Modelo generado")
+        # logging.info("--------- MODELO GENERADO ---------")
+
+        logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
+        GenerarSolucion(args, rutadata)
+
+def SaveDataset(rutadata):
     ruta_archivo_datatainer = os.path.join(rutadata, f"training{MODEL_TYPE}.json")
     ruta_archivo_datatavalid = os.path.join(rutadata, f"validation{MODEL_TYPE}.json")
     ruta_archivo_test = os.path.join(rutadata, f"test{MODEL_TYPE}.json")
@@ -274,63 +286,53 @@ def main():
             objeto_datatavalid.same = objeto_validouput['label']
     # Define una función lambda para aplicar vectorize_text a cada objeto y configurar text_vect
     vectorize_and_set_text_vect = lambda objeto: setattr(objeto, 'text_vec', vectorize_text(objeto.text, 512)) if objeto is not None else None
-    
     # Filtrar la lista datatainer para eliminar valores None
     datatainer = [objeto for objeto in datatainer if objeto is not None]
-
     # Aplica la función lambda a cada objeto en datatainer
     list(map(vectorize_and_set_text_vect, datatainer))
     list(map(vectorize_and_set_text_vect, datatavalid))
     list(map(vectorize_and_set_text_vect, datatatest))
-    
+    SaveDataset(ruta_archivo_datatainer, ruta_archivo_datatavalid, ruta_archivo_test)
 
-    # Convertir las matrices NumPy a listas antes de guardar
-    # The above code is iterating over each object in the "datatainer" and checking if the "text_vec"
-    # attribute of the object is not None. If it is not None, it converts the "text_vec" attribute
-    # from a numpy array to a list.
-    for obj in datatainer:
-        if obj.text_vec is not None:
-            obj.text_vec = obj.text_vec.tolist()
-    for obj in datatatest:
-        if obj.text_vec is not None:
-            obj.text_vec = obj.text_vec.tolist()
-
+def SaveDataset(ruta_archivo_datatainer, ruta_archivo_datatavalid, ruta_archivo_test):
+    ObjectDataTrainer()
+    Objectdatatatest()
+    Objectdatatavalid()
+    # Guardar datatainer en JSON
+    SaveJsonData(datatainer,ruta_archivo_datatainer)
+    # Guardar datatavalid en JSON
+    SaveJsonData(datatavalid,ruta_archivo_datatavalid) 
+    # Cargar los datos JSON en DataFrames
+    # Guardar datatavalid en JSON
+    SaveJsonData(datatatest,ruta_archivo_test)
+def SaveJsonData(data, rutadata):
+    with open(rutadata, "w") as archivo_json:
+        json.dump(data, archivo_json, default=custom_json_serializer, indent=4)
+ 
+    pass
+def Objectdatatavalid():
     for obj in datatavalid:
         if obj.text_vec is not None:
             obj.text_vec = obj.text_vec.tolist()
 
-    # Definir función personalizada para serializar objetos
-    def custom_json_serializer(obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif obj is not None:
-            return {key.lstrip('_'): value for key, value in obj.__dict__.items()}
-    # Guardar datatainer en JSON
-    with open(ruta_archivo_datatainer, "w") as archivo_json:
-        json.dump(datatainer, archivo_json, default=custom_json_serializer, indent=4)
-    # Guardar datatavalid en JSON
-    with open(ruta_archivo_datatavalid, "w") as archivo_json:
-        json.dump(datatavalid, archivo_json, default=custom_json_serializer, indent=4)
-        # Cargar los datos JSON en DataFrames
+def Objectdatatatest():
+    for obj in datatatest:
+        if obj.text_vec is not None:
+            obj.text_vec = obj.text_vec.tolist()
 
-    # Guardar datatavalid en JSON
-    with open(ruta_archivo_test, "w") as archivo_json:
-        json.dump(datatatest, archivo_json, default=custom_json_serializer, indent=4)
-        # Cargar los datos JSON en DataFrames
-
-    # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
-    if args.instancesDataset is not None:
-        logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
-        GenerarModelo(args, rutadata)
-        # print("Modelo generado")
-        # logging.info("--------- MODELO GENERADO ---------")
-
-        logging.info(f"--------- PREDICCION DEL MODELO {args.modelType}---------")
-        GenerarSolucion(args, rutadata)
+def ObjectDataTrainer():
+    for obj in datatainer:
+        if obj.text_vec is not None:
+            obj.text_vec = obj.text_vec.tolist()
         # print("solucion generada")
         # logging.info("--------- SOLUCION FINALIZADA ---------")
 
-
+ # Definir función personalizada para serializar objetos
+def custom_json_serializer(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif obj is not None:
+        return {key.lstrip('_'): value for key, value in obj.__dict__.items()}
 def cargar_json(file_path):
     data = []
     with open(file_path, "r") as filejson:
@@ -349,9 +351,9 @@ def GenerarSolucion(argss, carpeta):
     # device = torch.device('cuda')
 
     print(" Generar Solucion")
-    predict_test []=None
+    predict_test=[]
     datatest = None
-    datatest = pd.read_json.path.join(carpeta, f"validation{MODEL_TYPE}.json")
+    datatest = pd.read_json(os.path.join(carpeta, f"test{MODEL_TYPE}.json"))
     # Leer el contenido del archivo JSON como una cadena
     with open(PATH_parametros, "r") as file:
         json_data = file.read()
@@ -367,27 +369,33 @@ def GenerarSolucion(argss, carpeta):
             map_location=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
         )
     )
-    df = pd.DataFrame(datatest)  # Reemplaza "datatest" con tus datos reales
+    # Supongamos que tienes un DataFrame df con tus datos
+    # Reemplaza "datatest" con tus datos reales
+    df = pd.DataFrame(datatest)
+    df = df.iloc[:5, :]
 
-    # logging.info("Modelo cargado: ", modelo_cargado)
-    logging.info("Datos Prueba: ", df)
-    # Agrupar los datos por el valor de "id"
-    # Supongamos que tienes un DataFrame llamado "df" que contiene los datos con la columna "id"
-    # Agrupar los datos por el valor de "id"
-    mydata = MyDataset(df) 
-    dataloader = DataLoader(mydata, batch_size=len(df), shuffle=True)
-    for batch in dataloader:
-        input_ids = batch["input_ids"]
-        attention_mask = batch["attention_mask"]
-        labels = batch["labels"]
-        predicciones = modelo_cargado.predict(input_ids, attention_mask, labels)
-        labes2 = labels.argmax(dim=1)
-        data = {"predict": predicciones, "labels": labes2.tolist()}
-        # agregamos los datos en un array que continene el orden de las filas que vamos a predecir
-        predict_test.append(data)
-
-        # Crear el DataFrame a partir de la lista de diccionarios
-
+    
+    batch_size = 16
+    
+    # Dividir el DataFrame en lotes de tamaño batch_size
+    batches = [df[i:i + batch_size] for i in range(0, len(df), batch_size)]
+    
+    for batch in batches:
+        mydata = MyDataset(batch)  # Crear un dataset con el lote actual
+        dataloader = DataLoader(mydata, batch_size=len(batch), shuffle=True)
+    
+        for batch_data in dataloader:
+            input_ids = batch_data["input_ids"]
+            attention_mask = batch_data["attention_mask"]
+            labels = batch_data["labels"]
+            predicciones = modelo_cargado.predict(input_ids, attention_mask)
+            labes2 = labels.argmax(dim=1)
+            data = {"predict": predicciones, "labels": labes2.tolist()}
+            # Agregar los datos en un array que contiene el orden de las filas que vamos a predecir
+            predict_test.append(data)
+    
+            # Crear el DataFrame a partir de la lista de diccionarios
+    
     predict_test = pd.DataFrame(predict_test)
     logging.info("Resultado predicciones: ", predict_test)
     # Agrupar las listas en una sola lista por cada variable
