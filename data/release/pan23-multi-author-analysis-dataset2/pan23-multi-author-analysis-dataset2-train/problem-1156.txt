@@ -1,6 +1,0 @@
-You may get sued. It's unlikely to rise to criminal activity unless you crack into their system somehow, but it really depends on how you "use their database".
-The most likely thing that happens is that urbandictionary bans your app from being able to call their servers, since you're doing this without permission, or gets your app removed from the store. Apple may take action against your account such as banning you.
-Title: Is it legal to use the ‘unofficial’ urbandictionary public facing API for my own free app? I see some apps in the Google Play store and AppStore, but would like to be sure it is legal to do that.
-What do you mean by "use" urbandictionary's API? Are you calling urbandictionary.com? Or are you just copying how they did their public-facing API for your own site/app?
-I am a bot whose sole purpose is to improve the timeliness and accuracy of responses in this subreddit.
-It appears you forgot to include your location in the title or body of your post. Please update the body of your original post to include this information.

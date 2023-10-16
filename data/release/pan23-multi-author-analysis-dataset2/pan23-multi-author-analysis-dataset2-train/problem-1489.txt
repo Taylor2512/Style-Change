@@ -1,7 +1,0 @@
-In general, be courteous to others. Debate/discuss/argue the merits of ideas, don't attack people. Personal insults, shill or troll accusations, hate speech, any suggestion or support of harm, violence, or death, and other rule violations can result in a permanent ban.
-For those who have questions regarding any media outlets being posted on this subreddit, please click to review our details as to our approved domains list and outlet criteria.
-> RSA (Rivest–Shamir–Adleman) is a public-key cryptosystem that is widely used for secure data transmission. It is also one of the oldest. The acronym "RSA" comes from the surnames of Ron Rivest, Adi Shamir and Leonard Adleman, who publicly described the algorithm in 1977. An equivalent system was developed secretly in 1973 at Government Communications Headquarters (GCHQ) by the English mathematician Clifford Cocks. That system was declassified in 1997.
-372 qubits is what is theorized to break RSA-2048. Soon 4096 after that and then we need a new standard.
-Yeah straight up. Quantum computing is making some serious advances towards breaking RSA. It's not near future but it's on the way. Couple that with machine learning and it's a calamity.
-I am a bot, and this action was performed automatically. Please if you have any questions or concerns.
-As A.I. replaces more and more intellectual and creative processes, we'll begin losing our ability to plan, learn and adapt. That's not a bright future.

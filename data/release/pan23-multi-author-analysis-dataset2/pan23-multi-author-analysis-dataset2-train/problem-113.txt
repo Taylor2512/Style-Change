@@ -1,7 +1,0 @@
-Your post has been removed for offering poor advice. It is either generally bad or ill advised advice, an incorrect statement or conclusion of law, inapplicable for the jurisdiction under discussion, misunderstands the fundamental legal question, or is advice to commit an unlawful act. Please review the following rules before commenting further:
-Not only is it a clear violation of the schools technology policy, but also likely a violation of Federal Law:
-You see what you likely don't know is that when a wireless network is protected by username and password, this is almost certainly tied to RADIUS authentication. Essentially you've likely been using and selling either the IT User's personal username and password; or some sort of network access account.
-Last, by selling or giving them the password, you become part of whatever illegal act they do with it. That's where it gets very serious and possibly criminal.
-You're likely violating your school code of conduct and could be punished under it by your school. The same goes for everyone who bought it from you and uses it.
-Please . If after doing so, you believe this was in error, or you’ve edited your post to comply with the rules, . Do not make a second post or comment.
-It could also be a contract violation, which would be a civil matter. If any of this sale and use causes damages, then you all could be sued for that. For example, if they use this access to hack the schools system.

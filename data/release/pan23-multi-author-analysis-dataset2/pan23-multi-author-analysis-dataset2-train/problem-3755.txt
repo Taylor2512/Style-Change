@@ -1,7 +1,0 @@
-yeah as i understand it (correct me if i'm wrong) each number on the richter scale represents an order of magnitude.
-so if you're thinking about it like 1,2,3,4,5 in "strenh levels", it's actually more like 1,10,100,1000,10000, etc.
-Yeah I lived through a large earthquake in Indonesia and learned a lot about earthquakes in the aftermath. The truly scary part is not knowing if youve already felt the main quake or it it's still to come.
-Also from my small experience all earthquakes start the same and build so every aftershock brings just as much fear because you have no idea when it's going to stop or keep building.
-Basically the scale we use to determine the strenh of an earthquake is a logarithmic scale. Each whole number increase means a 31.6 increase in power (each .2 increase is double the power, roughly).
-The difference between a 6.0 and a 7.3 is significant, despite the closeness of the numbers. Aftershocks are only a fraction of the original and can happen hours or days after the main shock.
-To be more pedantic, what’s used today is the moment magnitude scale, which is a mathematical formalization of the old Richter scale, which scientists don’t use anymore but is the name that nonetheless stuck.
