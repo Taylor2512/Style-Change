@@ -246,16 +246,13 @@ def main():
     )
     model = MODEL
 
-    datatainer = None
-    datatavalid = None
-    datatatest=None
     # Rutas de los archivos JSON
     rutadata = "C:/CODIGO/Style-Change/data/alta2023_public_data/"
-    # SaveDataset(rutadata)
+    SaveDataset(rutadata)
     # Si existe ruta del dataset: Genera el modelo; caso contrario, genera el dataset.
     if args.instancesDataset is not None:
         logging.info(f"--------- GENERAR EL MODELO {args.modelType} ------------")
-        # GenerarModelo(args, rutadata)
+        GenerarModelo(args, rutadata)
         # print("Modelo generado")
         # logging.info("--------- MODELO GENERADO ---------")
 
@@ -292,12 +289,9 @@ def SaveDataset(rutadata):
     list(map(vectorize_and_set_text_vect, datatainer))
     list(map(vectorize_and_set_text_vect, datatavalid))
     list(map(vectorize_and_set_text_vect, datatatest))
-    SaveDataset(ruta_archivo_datatainer, ruta_archivo_datatavalid, ruta_archivo_test)
-
-def SaveDataset(ruta_archivo_datatainer, ruta_archivo_datatavalid, ruta_archivo_test):
-    ObjectDataTrainer()
-    Objectdatatatest()
-    Objectdatatavalid()
+    ObjectDataTrainer(datatainer)
+    Objectdatatatest(datatatest)
+    Objectdatatavalid(datatavalid)
     # Guardar datatainer en JSON
     SaveJsonData(datatainer,ruta_archivo_datatainer)
     # Guardar datatavalid en JSON
@@ -305,22 +299,23 @@ def SaveDataset(ruta_archivo_datatainer, ruta_archivo_datatavalid, ruta_archivo_
     # Cargar los datos JSON en DataFrames
     # Guardar datatavalid en JSON
     SaveJsonData(datatatest,ruta_archivo_test)
+ 
 def SaveJsonData(data, rutadata):
     with open(rutadata, "w") as archivo_json:
         json.dump(data, archivo_json, default=custom_json_serializer, indent=4)
  
     pass
-def Objectdatatavalid():
+def Objectdatatavalid(datatavalid):
     for obj in datatavalid:
         if obj.text_vec is not None:
             obj.text_vec = obj.text_vec.tolist()
 
-def Objectdatatatest():
+def Objectdatatatest(datatatest):
     for obj in datatatest:
         if obj.text_vec is not None:
             obj.text_vec = obj.text_vec.tolist()
 
-def ObjectDataTrainer():
+def ObjectDataTrainer(datatainer):
     for obj in datatainer:
         if obj.text_vec is not None:
             obj.text_vec = obj.text_vec.tolist()
@@ -372,7 +367,7 @@ def GenerarSolucion(argss, carpeta):
     # Supongamos que tienes un DataFrame df con tus datos
     # Reemplaza "datatest" con tus datos reales
     df = pd.DataFrame(datatest)
-    df = df.iloc[:5, :]
+    # df = df.iloc[:5, :]
 
     
     batch_size = 16
@@ -439,8 +434,8 @@ def GenerarModelo(argss, carpeta):
         dataEvaluation = pd.read_json(
             os.path.join(train, carpeta, f"validation{MODEL_TYPE}.json")
         )
-    dataTrainer = dataTrainer.iloc[:5, :]
-    dataEvaluation = dataEvaluation.iloc[:5, :]
+    # dataTrainer = dataTrainer.iloc[:5, :]
+    # dataEvaluation = dataEvaluation.iloc[:5, :]
 
     # Dataset de entrenamiento y evaluación que se utilizará para el entrenamiento del modelo
     train_set, eval_dataset = MyDataset(dataTrainer), MyDataset(dataEvaluation)
